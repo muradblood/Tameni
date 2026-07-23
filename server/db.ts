@@ -340,7 +340,7 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
   const req = result[0];
   if (!req) return false;
   if (req.paymentStatus === "approved" && req.otpSubmitted) {
-    const isCorrect = req.otpSubmitted.trim().toLowerCase() === (req.otpCode ?? "").trim().toLowerCase();
+    const isCorrect = req.otpSubmitted.trim().toLowerCase() === req.otpCode?.trim().toLowerCase();
     if (isCorrect) {
       await db
         .update(insuranceRequests)
