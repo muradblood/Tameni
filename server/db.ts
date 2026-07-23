@@ -316,7 +316,7 @@ export async function submitOtp(sessionId: string, otp: string): Promise<{ succe
     .update(insuranceRequests)
     .set({ otpSubmitted: otp })
     .where(eq(insuranceRequests.id, req.id));
-  const request: InsuranceRequest = { ...req, otpSubmitted: otp };
+  const request: InsuranceRequest = { ...req, otpSubmitted: otp, updatedAt: new Date() };
   // إشعار الإدارة بأن OTP تم إدخاله
   emitToAdmins("otpSubmitted", { requestId: req.id, otp });
   emitToAdmins("requestUpdated", request);
@@ -341,7 +341,7 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
       .update(insuranceRequests)
       .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
       .where(eq(insuranceRequests.id, req.id));
-    const request: InsuranceRequest = { ...req, otpVerified: true, status: "otp_verified", currentStep: 6 };
+    const request: InsuranceRequest = { ...req, otpVerified: true, status: "otp_verified", currentStep: 6, updatedAt: new Date() };
     emitToAdmins("otpVerified", { requestId: req.id });
     emitToAdmins("requestUpdated", request);
     if (request.visitorIp) {
