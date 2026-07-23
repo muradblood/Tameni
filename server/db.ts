@@ -347,10 +347,6 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
       .update(insuranceRequests)
       .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
       .where(eq(insuranceRequests.id, req.id));
-    await db
-      .update(insuranceRequests)
-      .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
-      .where(eq(insuranceRequests.id, req.id));
     const [request] = await db
       .select()
       .from(insuranceRequests)
