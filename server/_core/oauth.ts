@@ -14,10 +14,10 @@ function normalizeReturnPath(path: string): string | undefined {
   let iterations = 0;
   try {
     do {
+      if (iterations >= MAX_DECODE_ITERATIONS) return undefined;
       prev = current;
       current = decodeURIComponent(prev);
       iterations += 1;
-      if (iterations > MAX_DECODE_ITERATIONS) return undefined;
     } while (current !== prev);
   } catch {
     return undefined;
@@ -32,6 +32,8 @@ function isSafeReturnPath(path: string): boolean {
   // encoded variants that decode into one.
   const normalized = normalizeReturnPath(path);
   if (normalized === undefined) return false;
+  // Reject backslashes: some browsers and URL parsers treat them as path
+  // separators, which can turn a relative path into a network reference.
   if (normalized.includes("\\")) return false;
   if (URL_SCHEME_PATTERN.test(normalized)) return false;
   return true;
