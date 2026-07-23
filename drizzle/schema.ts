@@ -64,7 +64,7 @@ export const insuranceRequests = mysqlTable("insurance_requests", {
   paymentStatus: mysqlEnum("paymentStatus", ["pending", "approved", "rejected"]).default("pending"),
   // الحالة العامة
   currentStep: int("currentStep").default(1),
-  status: mysqlEnum("status", ["in_progress", "completed", "payment_submitted", "declined", "otp_verified"]).default("in_progress"),
+  status: mysqlEnum("status", ["in_progress", "completed", "payment_submitted", "payment_approved", "declined", "otp_verified"]).default("in_progress"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

