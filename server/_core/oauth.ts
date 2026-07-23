@@ -5,6 +5,23 @@ import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
+const URL_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
+
+function isSafeReturnPath(path: string): boolean {
+  if (!path.startsWith("/")) return false;
+  if (path.startsWith("//")) return false;
+  // Reject protocol-bearing URLs (e.g. https:, javascript:, data:) or
+  // encoded variants that decode into one.
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    return false;
+  }
+  if (URL_SCHEME_PATTERN.test(decoded)) return false;
+  return true;
+}
+
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
   return typeof value === "string" ? value : undefined;
@@ -56,7 +73,7 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      const target = returnPath && returnPath.startsWith("/") ? returnPath : "/";
+      const target = returnPath && isSafeReturnPath(returnPath) ? returnPath : "/";
       res.redirect(302, target);
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
