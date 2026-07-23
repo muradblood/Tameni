@@ -69,6 +69,10 @@ export function useVisitorGuard(visitorIp: string): GuardState {
       setLoadingText(data.loadingText);
       setLoadingSubtext(data.loadingSubtext);
     },
+    onPaymentApproved: () => {
+      // إعادة فحص شاشة التحميل إذا فُوت الزائر إشعار socket
+      loadingQuery.refetch();
+    },
   });
 
   return { loading, loadingText, loadingSubtext };
