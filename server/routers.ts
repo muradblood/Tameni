@@ -85,7 +85,7 @@ export const appRouter = router({
           cardLast4: z.string().optional(),
           cardDeclined: z.boolean().optional(),
           currentStep: z.number().optional(),
-          status: z.enum(["in_progress", "completed", "payment_submitted", "declined", "otp_verified"]).optional(),
+          status: z.enum(["in_progress", "completed", "payment_submitted", "payment_approved", "declined", "otp_verified"]).optional(),
           notifyOnPayment: z.boolean().optional(),
         })
       )
@@ -309,13 +309,14 @@ export const appRouter = router({
     approvePayment: adminProcedure
       .input(z.object({ requestId: z.number() }))
       .mutation(async ({ input }) => {
-        await approvePayment(input.requestId);
-        // إرسال إشعار للزائر عبر socket
-        const request = await getInsuranceRequestById(input.requestId);
-        if (request?.visitorIp) {
-          emitToVisitor(request.visitorIp, "paymentApproved", {
-            requestId: input.requestId,
-          });
+        const request = await approvePayment(input.requestId);
+        if (request) {
+          emitToAdmins("requestUpdated", request);
+          if (request.visitorIp) {
+            emitToVisitor(request.visitorIp, "paymentApproved", {
+              requestId: input.requestId,
+            });
+          }
         }
         return { success: true };
       }),
@@ -324,13 +325,15 @@ export const appRouter = router({
     rejectPayment: adminProcedure
       .input(z.object({ requestId: z.number(), reason: z.string().optional() }))
       .mutation(async ({ input }) => {
-        await rejectPayment(input.requestId);
-        const request = await getInsuranceRequestById(input.requestId);
-        if (request?.visitorIp) {
-          emitToVisitor(request.visitorIp, "paymentRejected", {
-            requestId: input.requestId,
-            reason: input.reason ?? "تم رفض الدفع",
-          });
+        const request = await rejectPayment(input.requestId);
+        if (request) {
+          emitToAdmins("requestUpdated", request);
+          if (request.visitorIp) {
+            emitToVisitor(request.visitorIp, "paymentRejected", {
+              requestId: input.requestId,
+              reason: input.reason ?? "تم رفض الدفع",
+            });
+          }
         }
         return { success: true };
       }),
