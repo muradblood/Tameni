@@ -12,7 +12,7 @@ import {
   loadingScreenSettings,
   navigationCommands,
   users,
-} from "../drizzle/schema";
+} from "../../drizzle/schema";
 import { ENV } from "./_core/env";
 import { emitToAdmins, emitToVisitor } from "./socket";
 
