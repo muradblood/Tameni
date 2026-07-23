@@ -121,7 +121,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden">
-              <img src="/manus-storage/logo_941d1a40.png" alt="تأميني" className="w-full h-full object-cover" />
+              <img src="/assets/logo/logo-180.png" alt="تأميني" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="font-bold text-gray-900 text-base">لوحة تحكم تأميني</h1>
