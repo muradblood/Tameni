@@ -14,7 +14,9 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     const next: NextFunction = (err?: unknown) => {
       if (err) {
         console.error("[tRPC] error:", err);
-        if (!res.headersSent) res.status(500).end();
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Internal server error" });
+        }
         reject(err);
       } else {
         resolve();
