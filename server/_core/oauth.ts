@@ -6,19 +6,36 @@ import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
 const URL_SCHEME_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
+const MAX_DECODE_ITERATIONS = 10;
+
+function normalizeReturnPath(path: string): string | undefined {
+  let prev: string;
+  let current = path;
+  let iterations = 0;
+  try {
+    do {
+      if (iterations >= MAX_DECODE_ITERATIONS) return undefined;
+      prev = current;
+      current = decodeURIComponent(prev);
+      iterations += 1;
+    } while (current !== prev);
+  } catch {
+    return undefined;
+  }
+  return current;
+}
 
 function isSafeReturnPath(path: string): boolean {
   if (!path.startsWith("/")) return false;
   if (path.startsWith("//")) return false;
   // Reject protocol-bearing URLs (e.g. https:, javascript:, data:) or
   // encoded variants that decode into one.
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(path);
-  } catch {
-    return false;
-  }
-  if (URL_SCHEME_PATTERN.test(decoded)) return false;
+  const normalized = normalizeReturnPath(path);
+  if (normalized === undefined) return false;
+  // Reject backslashes: some browsers and URL parsers treat them as path
+  // separators, which can turn a relative path into a network reference.
+  if (normalized.includes("\\")) return false;
+  if (URL_SCHEME_PATTERN.test(normalized)) return false;
   return true;
 }
 
