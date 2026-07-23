@@ -4,7 +4,7 @@ export const AXIOS_TIMEOUT_MS = 30_000;
 export const UNAUTHED_ERR_MSG = 'Please login (10001)';
 export const NOT_ADMIN_ERR_MSG = 'You do not have required permission (10002)';
 export const OAUTH_STATE_COOKIE = "__Host-oauth_state";
-export type OAuthState = { redirectUri: string; nonce?: string };
+export type OAuthState = { redirectUri: string; nonce?: string; returnPath?: string };
 export const encodeOAuthState = (state: OAuthState): string =>
   btoa(JSON.stringify(state));
 export const decodeOAuthState = (state: string): OAuthState => {
