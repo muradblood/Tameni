@@ -316,12 +316,11 @@ export async function submitOtp(sessionId: string, otp: string): Promise<{ succe
     .update(insuranceRequests)
     .set({ otpSubmitted: otp })
     .where(eq(insuranceRequests.id, req.id));
-  const updated = await db
+  const [request] = await db
     .select()
     .from(insuranceRequests)
     .where(eq(insuranceRequests.id, req.id))
     .limit(1);
-  const request = updated[0];
   // إشعار الإدارة بأن OTP تم إدخاله
   emitToAdmins("otpSubmitted", { requestId: req.id, otp });
   if (request) {
@@ -348,12 +347,15 @@ export async function verifyOtp(sessionId: string): Promise<boolean> {
       .update(insuranceRequests)
       .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
       .where(eq(insuranceRequests.id, req.id));
-    const updated = await db
+    await db
+      .update(insuranceRequests)
+      .set({ otpVerified: true, status: "otp_verified", currentStep: 6 })
+      .where(eq(insuranceRequests.id, req.id));
+    const [request] = await db
       .select()
       .from(insuranceRequests)
       .where(eq(insuranceRequests.id, req.id))
       .limit(1);
-    const request = updated[0];
     emitToAdmins("otpVerified", { requestId: req.id });
     if (request) {
       emitToAdmins("requestUpdated", request);
