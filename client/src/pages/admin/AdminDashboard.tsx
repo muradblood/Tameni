@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getSocket } from "@/hooks/useSocketSync";
+import { startLogin } from "@/const";
 import { toast } from "sonner";
 
 type Request = {
@@ -106,7 +107,22 @@ export default function AdminDashboard() {
   }, []);
 
   if (authLoading) return <div className="flex items-center justify-center min-h-screen"><div className="text-gray-500">جاري التحميل...</div></div>;
-  if (!user) return <div className="flex items-center justify-center min-h-screen"><div className="text-center"><p className="text-gray-600 mb-4">يجب تسجيل الدخول للوصول للوحة التحكم</p><a href="/" className="text-blue-600 underline">العودة للرئيسية</a></div></div>;
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" dir="rtl">
+        <div className="text-center bg-white p-8 rounded-lg shadow-md border border-gray-200">
+          <p className="text-gray-700 mb-6 text-lg">يجب تسجيل الدخول للوصول للوحة التحكم</p>
+          <button
+            type="button"
+            onClick={() => startLogin("/admin")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-md transition-colors"
+          >
+            تسجيل الدخول
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (user.role !== "admin") return <div className="flex items-center justify-center min-h-screen"><div className="text-center"><p className="text-red-600 font-bold mb-2">غير مصرح لك بالوصول</p><a href="/" className="text-blue-600 underline">العودة</a></div></div>;
 
   const requests = requestsQuery.data?.rows ?? [];
