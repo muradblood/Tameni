@@ -93,7 +93,7 @@ export default function Home() {
         <div className="container max-w-lg mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg overflow-hidden">
-              <img src="/manus-storage/logo_941d1a40.png" alt="تأميني" className="w-full h-full object-cover" />
+              <img src="/assets/logo/logo-180.png" alt="تأميني" className="w-full h-full object-cover" />
             </div>
             <span className="text-lg font-bold text-gray-800">تأميني</span>
           </div>
@@ -135,7 +135,7 @@ export default function Home() {
       <div className="container max-w-lg mx-auto px-4 mt-3">
         <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/manus-storage/logo_941d1a40.png" alt="" className="w-6 h-6 rounded" />
+            <img src="/assets/logo/logo-180.png" alt="" className="w-6 h-6 rounded" />
             <div>
               <p className="text-xs font-bold text-gray-800">بلـس</p>
               <p className="text-[10px] text-gray-500">بواسطة زودا</p>
@@ -162,7 +162,7 @@ export default function Home() {
           </div>
           <div className="relative w-full h-[220px] -mt-4">
             <img
-              src="/manus-storage/hero-image_8d346c36.webp"
+              src="/assets/hero/hero.webp"
               alt="تأمين المركبات"
               className="w-full h-full object-cover object-top"
             />
@@ -298,7 +298,7 @@ export default function Home() {
         <div className="container max-w-lg mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg overflow-hidden">
-              <img src="/manus-storage/logo_941d1a40.png" alt="تأميني" className="w-full h-full object-cover" />
+              <img src="/assets/logo/logo-180.png" alt="تأميني" className="w-full h-full object-cover" />
             </div>
             <span className="text-lg font-bold text-gray-800">تأميني</span>
           </div>
