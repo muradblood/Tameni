@@ -48,7 +48,6 @@
   mobileBookingBar.innerHTML = '<a class="btn btn-primary" href="https://sarbussat.online/ar/i.php" target="_blank" rel="noopener noreferrer">حجز رحلات بين المدن ←</a>';
   document.body.appendChild(mobileBookingBar);
 
-  // تحسين شكل قسم آراء العملاء مع صور توضيحية، دون الادعاء بأنها صور أصحاب الشهادات الفعلية.
   const firstTestimonial = document.querySelector('.testimonial');
   const testimonialsGrid = firstTestimonial?.parentElement;
   const testimonialsSection = firstTestimonial?.closest('.section');
@@ -85,6 +84,25 @@
       </div>`;
   }
 
+  const campaignParams = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid','gbraid','wbraid'];
+  const landingParams = new URLSearchParams(window.location.search);
+
+  function preserveCampaignParams(link) {
+    const rawHref = link.getAttribute('href');
+    if (!rawHref) return;
+
+    try {
+      const bookingUrl = new URL(rawHref, window.location.href);
+      campaignParams.forEach(key => {
+        const value = landingParams.get(key);
+        if (value && !bookingUrl.searchParams.has(key)) {
+          bookingUrl.searchParams.set(key, value);
+        }
+      });
+      link.href = bookingUrl.toString();
+    } catch (_) {}
+  }
+
   function trackBookingClick(link) {
     const href = link.getAttribute('href') || '';
     const isInternational = href.includes('/bus/ar/index.php');
@@ -96,6 +114,7 @@
   }
 
   document.querySelectorAll('a[href^="https://sarbussat.online/"]').forEach(link => {
+    preserveCampaignParams(link);
     const originalText = link.textContent;
     let locked = false;
 
