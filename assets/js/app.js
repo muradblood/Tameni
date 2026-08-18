@@ -14,6 +14,50 @@
     contact: 'page-contact'
   };
 
+  const routeSeo = {
+    home: {
+      title: 'النقل الجماعي | حجز رحلات بين المدن والرحلات الدولية',
+      description: 'خدمات النقل الجماعي وحجز رحلات الحافلات بين المدن السعودية والرحلات الدولية، مع معلومات عن الوجهات والمدن وخيارات الحجز.'
+    },
+    routes: {
+      title: 'رحلات الحافلات بين المدن السعودية | النقل الجماعي',
+      description: 'تعرف على أبرز رحلات الحافلات بين المدن السعودية، المدد التقريبية، الوجهات ومعلومات تساعدك قبل الانتقال إلى الحجز.'
+    },
+    'public-transport': {
+      title: 'النقل الجماعي في السعودية | خدمات الحافلات بين المدن',
+      description: 'معلومات عن خدمات النقل الجماعي والحافلات بين المدن السعودية والمحطات وخيارات الحجز الإلكتروني.'
+    },
+    'route-riyadh-jeddah': {
+      title: 'رحلة الرياض إلى جدة بالحافلة | النقل الجماعي',
+      description: 'معلومات عن رحلة الحافلة من الرياض إلى جدة، المدة التقريبية ومحطات التوقف وخيار الانتقال إلى الحجز.'
+    },
+    'route-riyadh-dammam': {
+      title: 'رحلة الرياض إلى الدمام بالحافلة | النقل الجماعي',
+      description: 'معلومات عن رحلة الحافلة من الرياض إلى الدمام، المدة التقريبية ومحطات التوقف وخيار الانتقال إلى الحجز.'
+    },
+    'route-jeddah-makkah': {
+      title: 'رحلة جدة إلى مكة بالحافلة | النقل الجماعي',
+      description: 'معلومات عن رحلة الحافلة من جدة إلى مكة المكرمة، المدة التقريبية والتكرار وخيار الانتقال إلى الحجز.'
+    },
+    cities: {
+      title: 'مدن ومحطات الحافلات في السعودية | النقل الجماعي',
+      description: 'تعرف على محطات وخدمات النقل في الرياض وجدة ومكة والمدينة والدمام وتبوك وحائل وعسير.'
+    },
+    'city-riyadh': { title: 'محطة الرياض للحافلات | النقل الجماعي', description: 'معلومات عن محطة الرياض وخدمات الرحلات اليومية إلى مدن المملكة.' },
+    'city-jeddah': { title: 'محطة جدة للحافلات | النقل الجماعي', description: 'معلومات عن محطة جدة والرحلات إلى مكة والمدينة والرياض والطائف.' },
+    'city-makkah': { title: 'محطة مكة المكرمة للحافلات | النقل الجماعي', description: 'معلومات عن محطات مكة المكرمة وخدمات الرحلات للزوار والمعتمرين.' },
+    'city-madinah': { title: 'محطة المدينة المنورة للحافلات | النقل الجماعي', description: 'معلومات عن محطة المدينة المنورة والرحلات إلى مكة وجدة والرياض.' },
+    'city-dammam': { title: 'محطة الدمام للحافلات | النقل الجماعي', description: 'معلومات عن محطة الدمام وخدمات النقل إلى الرياض والأحساء والجبيل.' },
+    'city-tabuk': { title: 'محطة تبوك للحافلات | النقل الجماعي', description: 'معلومات عن محطة تبوك والرحلات إلى المدينة وحائل والجوف.' },
+    'city-hail': { title: 'محطة حائل للحافلات | النقل الجماعي', description: 'معلومات عن محطة حائل وخدمات النقل إلى الرياض والقصيم والمدينة وتبوك.' },
+    'city-asir': { title: 'محطات عسير وأبها وخميس مشيط | النقل الجماعي', description: 'معلومات عن محطات عسير وأبها وخميس مشيط والرحلات إلى الرياض وجدة ونجران.' },
+    blog: { title: 'مدونة السفر والنقل في السعودية | النقل الجماعي', description: 'مقالات ونصائح عن السفر والنقل والوجهات داخل المملكة العربية السعودية.' },
+    'blog-1': { title: 'دليل السفر إلى العلا | النقل الجماعي', description: 'دليل مختصر للتخطيط لزيارة العلا والنقل والسكن وأبرز المعلومات قبل السفر.' },
+    'blog-2': { title: 'أفضل الأسواق الشعبية في السعودية | النقل الجماعي', description: 'معلومات مختصرة عن الأسواق الشعبية والتراثية في المدن السعودية.' },
+    'blog-3': { title: 'شواطئ البحر الأحمر في السعودية | النقل الجماعي', description: 'تعرف على وجهات ساحل البحر الأحمر مثل جدة وينبع وأملج ونصائح التخطيط للسفر.' },
+    contact: { title: 'اتصل بنا | النقل الجماعي', description: 'صفحة التواصل والاستفسارات الخاصة بموقع النقل الجماعي.' }
+  };
+
   const overlay = document.getElementById('nav-overlay');
   const drawer = document.getElementById('nav-drawer');
   const menuBtn = document.getElementById('menu-btn');
@@ -147,6 +191,25 @@
     if (open) closeBtn?.focus();
   }
 
+  function setMeta(selector, value, attr = 'content') {
+    const element = document.head.querySelector(selector);
+    if (element && value) element.setAttribute(attr, value);
+  }
+
+  function updateRouteSeo(route) {
+    const seo = routeSeo[route] || routeSeo.home;
+    const base = 'https://tameni-zeta.vercel.app/';
+    const canonical = route === 'home' ? base : `${base}#${route}`;
+    document.title = seo.title;
+    setMeta('meta[name="description"]', seo.description);
+    setMeta('meta[property="og:title"]', seo.title);
+    setMeta('meta[property="og:description"]', seo.description);
+    setMeta('meta[property="og:url"]', canonical);
+    setMeta('meta[name="twitter:title"]', seo.title);
+    setMeta('meta[name="twitter:description"]', seo.description);
+    setMeta('link[rel="canonical"]', canonical, 'href');
+  }
+
   function navigate() {
     const route = (window.location.hash || '#home').slice(1);
     const pageId = routeMap[route] || routeMap.home;
@@ -157,8 +220,7 @@
     });
     setNav(false);
     window.scrollTo({ top: 0, behavior: 'auto' });
-    const heading = document.querySelector(`#${pageId} h1, #${pageId} h2`);
-    document.title = heading ? `${heading.textContent.trim()} | النقل الجماعي` : 'النقل الجماعي';
+    updateRouteSeo(routeMap[route] ? route : 'home');
   }
 
   menuBtn?.addEventListener('click', () => setNav(true));
