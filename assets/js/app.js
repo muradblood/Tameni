@@ -14,6 +14,31 @@
     contact: 'page-contact'
   };
 
+  const pathRouteMap = {
+    '/': 'home',
+    '/routes': 'routes',
+    '/public-transport': 'public-transport',
+    '/routes/riyadh-jeddah': 'route-riyadh-jeddah',
+    '/routes/riyadh-dammam': 'route-riyadh-dammam',
+    '/routes/jeddah-makkah': 'route-jeddah-makkah',
+    '/cities': 'cities',
+    '/cities/riyadh': 'city-riyadh',
+    '/cities/jeddah': 'city-jeddah',
+    '/cities/makkah': 'city-makkah',
+    '/cities/madinah': 'city-madinah',
+    '/cities/dammam': 'city-dammam',
+    '/cities/tabuk': 'city-tabuk',
+    '/cities/hail': 'city-hail',
+    '/cities/asir': 'city-asir',
+    '/blog': 'blog',
+    '/blog/alula-guide': 'blog-1',
+    '/blog/popular-markets': 'blog-2',
+    '/blog/red-sea-beaches': 'blog-3',
+    '/contact': 'contact'
+  };
+
+  const routePaths = Object.fromEntries(Object.entries(pathRouteMap).map(([path, route]) => [route, path]));
+
   const routeSeo = {
     home: {
       title: 'النقل الجماعي | حجز رحلات بين المدن والرحلات الدولية',
@@ -198,8 +223,9 @@
 
   function updateRouteSeo(route) {
     const seo = routeSeo[route] || routeSeo.home;
-    const base = 'https://tameni-zeta.vercel.app/';
-    const canonical = route === 'home' ? base : `${base}#${route}`;
+    const base = 'https://tameni-zeta.vercel.app';
+    const path = routePaths[route] || '/';
+    const canonical = `${base}${path}`;
     document.title = seo.title;
     setMeta('meta[name="description"]', seo.description);
     setMeta('meta[property="og:title"]', seo.title);
@@ -210,8 +236,17 @@
     setMeta('link[rel="canonical"]', canonical, 'href');
   }
 
+  function resolveRoute() {
+    if (window.location.hash) {
+      const hashRoute = window.location.hash.slice(1);
+      if (routeMap[hashRoute]) return hashRoute;
+    }
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    return pathRouteMap[path] || 'home';
+  }
+
   function navigate() {
-    const route = (window.location.hash || '#home').slice(1);
+    const route = resolveRoute();
     const pageId = routeMap[route] || routeMap.home;
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     document.getElementById(pageId)?.classList.add('active');
@@ -228,6 +263,7 @@
   overlay?.addEventListener('click', () => setNav(false));
   document.addEventListener('keydown', event => { if (event.key === 'Escape') setNav(false); });
   window.addEventListener('hashchange', navigate);
+  window.addEventListener('popstate', navigate);
   navigate();
 
   document.querySelectorAll('.faq-toggle').forEach(button => {
