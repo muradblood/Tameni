@@ -1,0 +1,95 @@
+name: One-time SEO head update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/seo-head-update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-seo-head:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update SEO metadata safely
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          canonical = 'https://tameni-zeta.vercel.app/'
+          title = 'النقل الجماعي | حجز رحلات بين المدن والرحلات الدولية'
+          desc = 'خدمات النقل الجماعي وحجز رحلات الحافلات بين المدن السعودية والرحلات الدولية، مع معلومات عن الوجهات والمدن وخيارات الحجز.'
+          og_desc = 'تعرف على خدمات النقل الجماعي والوجهات والمدن، وانتقل مباشرة إلى حجز الرحلات بين المدن أو الرحلات الدولية.'
+          image = canonical + 'assets/img/hero-saptco.png'
+
+          def replace_or_insert(pattern, replacement, anchor_pattern):
+              global s
+              if re.search(pattern, s, flags=re.I|re.S):
+                  s = re.sub(pattern, replacement, s, count=1, flags=re.I|re.S)
+              else:
+                  s = re.sub(anchor_pattern, lambda m: m.group(0) + '\n  ' + replacement, s, count=1, flags=re.I)
+
+          replace_or_insert(r'<title>.*?</title>', f'<title>{title}</title>', r'<meta name="viewport"[^>]*>')
+          replace_or_insert(r'<meta\s+name=["\']description["\'][^>]*>', f'<meta name="description" content="{desc}">', r'<meta name="viewport"[^>]*>')
+          replace_or_insert(r'<meta\s+name=["\']robots["\'][^>]*>', '<meta name="robots" content="index,follow,max-image-preview:large">', r'<meta name="description"[^>]*>')
+          replace_or_insert(r'<link\s+rel=["\']canonical["\'][^>]*>', f'<link rel="canonical" href="{canonical}">', r'<meta name="robots"[^>]*>')
+
+          seo_block = f'''<meta property="og:locale" content="ar_SA">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{title}">
+  <meta property="og:description" content="{og_desc}">
+  <meta property="og:url" content="{canonical}">
+  <meta property="og:image" content="{image}">
+  <meta property="og:image:alt" content="خدمات النقل الجماعي ورحلات الحافلات">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{title}">
+  <meta name="twitter:description" content="خدمات النقل الجماعي والوجهات والمدن وخيارات حجز الرحلات بين المدن والرحلات الدولية.">
+  <meta name="twitter:image" content="{image}">'''
+
+          # Remove any existing OG/Twitter tags we manage, then insert one clean block.
+          managed = [
+              r'\s*<meta\s+property=["\']og:(?:locale|type|title|description|url|image|image:alt)["\'][^>]*>',
+              r'\s*<meta\s+name=["\']twitter:(?:card|title|description|image)["\'][^>]*>'
+          ]
+          for pat in managed:
+              s = re.sub(pat, '', s, flags=re.I)
+          s = re.sub(r'(<link\s+rel=["\']canonical["\'][^>]*>)', r'\1\n  ' + seo_block, s, count=1, flags=re.I)
+
+          structured = f'''<script type="application/ld+json">{{"@context":"https://schema.org","@type":"WebSite","name":"النقل الجماعي","url":"{canonical}","inLanguage":"ar","description":"خدمات النقل الجماعي وحجز رحلات الحافلات بين المدن السعودية والرحلات الدولية."}}</script>'''
+          s = re.sub(r'\s*<script\s+type=["\']application/ld\+json["\']>.*?</script>', '', s, flags=re.I|re.S)
+          s = s.replace('</head>', '  ' + structured + '\n</head>', 1)
+
+          # Safety checks: do not write if core document markers are missing.
+          required = ['<html', '<head', '</head>', '<body', '</body>', '<main', 'assets/js/app.js']
+          missing = [x for x in required if x not in s]
+          if missing:
+              raise SystemExit(f'Safety check failed, missing markers: {missing}')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Verify only head changed structurally
+        run: |
+          grep -q '<link rel="canonical" href="https://tameni-zeta.vercel.app/">' index.html
+          grep -q 'application/ld+json' index.html
+          grep -q 'assets/js/app.js' index.html
+
+      - name: Commit SEO metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Improve SEO metadata in page head'
+          git push origin main
