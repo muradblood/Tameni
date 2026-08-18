@@ -40,3 +40,4 @@ jobs:
           git add index.html
           git commit -m 'Set Google site name to النقل الجماعي سابتكو سات'
           git push origin main
+# rerun
