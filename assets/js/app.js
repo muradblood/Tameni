@@ -30,6 +30,23 @@
   const heroImage = document.querySelector('.hero-image');
   if (heroImage) heroImage.fetchPriority = 'high';
 
+  // زر حجز ثابت للجوال فقط مع نفس هوية الأزرار الحالية.
+  const mobileBookingStyle = document.createElement('style');
+  mobileBookingStyle.textContent = `
+    .mobile-booking-bar{display:none}
+    @media (max-width: 768px){
+      body{padding-bottom:82px}
+      .mobile-booking-bar{position:fixed;right:0;bottom:0;left:0;z-index:79;display:block;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid rgba(0,0,0,.08);box-shadow:0 -8px 26px rgba(0,0,0,.08);backdrop-filter:blur(12px)}
+      .mobile-booking-bar .btn{display:flex;width:100%;min-height:50px}
+    }
+  `;
+  document.head.appendChild(mobileBookingStyle);
+
+  const mobileBookingBar = document.createElement('div');
+  mobileBookingBar.className = 'mobile-booking-bar';
+  mobileBookingBar.innerHTML = '<a class="btn btn-primary" href="https://sarbussat.online/ar/i.php" target="_blank" rel="noopener noreferrer">حجز رحلات بين المدن ←</a>';
+  document.body.appendChild(mobileBookingBar);
+
   // تحسين تفاعل روابط الحجز فقط: منع النقر المتكرر لحظياً مع إبقاء نفس الرابط وطريقة الفتح.
   document.querySelectorAll('a[href^="https://sarbussat.online/"]').forEach(link => {
     const originalText = link.textContent;
