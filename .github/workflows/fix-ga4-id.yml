@@ -1,0 +1,35 @@
+name: One-time GA4 ID correction
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-ga4-id.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Correct GA4 measurement ID only
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='G-8WP8N0MFEO'
+          new='G-8WP8N0MFE0'
+          if old not in s:
+              raise SystemExit('Old GA4 ID not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+          if old in p.read_text() or new not in p.read_text():
+              raise SystemExit('GA4 ID replacement failed')
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Correct GA4 measurement ID'
+          git push origin main
