@@ -4,6 +4,16 @@
   "buildCommand": null,
   "installCommand": "",
   "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/routes", "destination": "/index.html" },
+    { "source": "/public-transport", "destination": "/index.html" },
+    { "source": "/routes/:slug", "destination": "/index.html" },
+    { "source": "/cities", "destination": "/index.html" },
+    { "source": "/cities/:slug", "destination": "/index.html" },
+    { "source": "/blog", "destination": "/index.html" },
+    { "source": "/blog/:slug", "destination": "/index.html" },
+    { "source": "/contact", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
