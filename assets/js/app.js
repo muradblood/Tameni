@@ -30,6 +30,29 @@
   const heroImage = document.querySelector('.hero-image');
   if (heroImage) heroImage.fetchPriority = 'high';
 
+  // تحسين تفاعل روابط الحجز فقط: منع النقر المتكرر لحظياً مع إبقاء نفس الرابط وطريقة الفتح.
+  document.querySelectorAll('a[href^="https://sarbussat.online/"]').forEach(link => {
+    const originalText = link.textContent;
+    let locked = false;
+
+    link.addEventListener('click', event => {
+      if (locked) {
+        event.preventDefault();
+        return;
+      }
+
+      locked = true;
+      link.setAttribute('aria-busy', 'true');
+      link.textContent = 'جاري تحويلك…';
+
+      window.setTimeout(() => {
+        locked = false;
+        link.removeAttribute('aria-busy');
+        link.textContent = originalText;
+      }, 1500);
+    });
+  });
+
   function setNav(open) {
     if (!overlay || !drawer || !menuBtn) return;
     overlay.classList.toggle('show', open);
