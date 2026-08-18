@@ -33,3 +33,4 @@ jobs:
           git add index.html
           git commit -m 'Correct GA4 measurement ID'
           git push origin main
+# retrigger
