@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tameni-zeta.vercel.app/sitemap.xml
+Sitemap: https://satpcosa.vercel.app/sitemap.xml
