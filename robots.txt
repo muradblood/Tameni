@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tameni-zeta.vercel.app/sitemap.xml
