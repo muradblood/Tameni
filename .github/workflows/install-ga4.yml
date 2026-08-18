@@ -1,0 +1,52 @@
+name: One-time GA4 install
+on:
+  push:
+    paths:
+      - '.github/workflows/install-ga4.yml'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install GA4 tag and booking events
+        shell: python
+        run: |
+          from pathlib import Path
+
+          index = Path('index.html')
+          html = index.read_text()
+          measurement_id = 'G-8WP8N0MFEO'
+          if measurement_id not in html:
+              marker = '<head>\n'
+              tag = '''<head>\n  <!-- Google tag (gtag.js) -->\n  <script async src="https://www.googletagmanager.com/gtag/js?id=G-8WP8N0MFEO"></script>\n  <script>\n    window.dataLayer = window.dataLayer || [];\n    function gtag(){dataLayer.push(arguments);}\n    gtag('js', new Date());\n    gtag('config', 'G-8WP8N0MFEO');\n  </script>\n'''
+              if marker not in html:
+                  raise SystemExit('Missing <head> marker')
+              html = html.replace(marker, tag, 1)
+              index.write_text(html)
+
+          app = Path('assets/js/app.js')
+          js = app.read_text()
+          old = "function trackBookingClick(link){const href=link.getAttribute('href')||'';const isInternational=href.includes('/bus/ar/index.php');const eventName=isInternational?'international_booking_click':'intercity_booking_click';const detail={event:eventName,booking_url:href,booking_type:isInternational?'international':'intercity'};window.dataLayer=window.dataLayer||[];window.dataLayer.push(detail);window.dispatchEvent(new CustomEvent('booking_click',{detail}));}"
+          new = "function trackBookingClick(link){const href=link.getAttribute('href')||'';const isInternational=href.includes('/bus/ar/index.php');const eventName=isInternational?'international_booking_click':'intercity_booking_click';const detail={event:eventName,booking_url:href,booking_type:isInternational?'international':'intercity',page_route:resolveRoute()};window.dataLayer=window.dataLayer||[];window.dataLayer.push(detail);if(typeof window.gtag==='function'){window.gtag('event',eventName,{booking_url:href,booking_type:detail.booking_type,page_route:detail.page_route});}window.dispatchEvent(new CustomEvent('booking_click',{detail}));}"
+          if old in js:
+              js = js.replace(old, new, 1)
+              app.write_text(js)
+          elif "window.gtag('event',eventName" not in js:
+              raise SystemExit('Expected trackBookingClick implementation not found')
+
+          if measurement_id not in index.read_text():
+              raise SystemExit('GA4 measurement id was not installed')
+          if "window.gtag('event',eventName" not in app.read_text():
+              raise SystemExit('GA4 booking event call was not installed')
+      - name: Commit GA4 integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html assets/js/app.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'Integrate GA4 booking conversion events'
+          git push origin main
