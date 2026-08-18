@@ -1,0 +1,36 @@
+name: One-time testimonial copy update
+on:
+  push:
+    paths:
+      - '.github/workflows/update-testimonial-copy.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Update testimonial text only
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('assets/js/app.js')
+          s=p.read_text()
+          replacements={
+            'واجهة واضحة وسهلة، والوصول إلى خيارات الرحلات سريع.':'كانت الرحلة مريحة والحافلة نظيفة، وانطلقت الرحلة في موعدها. تجربة سفر ممتازة.',
+            'المعلومات مرتبة بشكل جيد وتعمل الصفحة بسرعة على الهاتف.':'الحجز كان سريعًا وسهلًا، وبعد إتمام الحجز كانت تفاصيل الرحلة واضحة. تجربة موفقة.',
+            'التنقل بين المدن والرحلات سهل، والتصميم مريح وواضح.':'رحلة مريحة وتعامل جيد، والمقاعد كانت مناسبة للرحلة. سأكرر الحجز مرة أخرى.'
+          }
+          for old,new in replacements.items():
+              if old not in s: raise SystemExit(f'Missing expected text: {old}')
+              s=s.replace(old,new,1)
+          p.write_text(s)
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/js/app.js
+          git commit -m 'Update customer testimonial copy'
+          git push origin main
