@@ -19,6 +19,17 @@
   const menuBtn = document.getElementById('menu-btn');
   const closeBtn = document.getElementById('close-nav');
 
+  // تحسين تحميل الصور فقط دون أي تغيير بصري أو في تدفق الصفحات.
+  document.querySelectorAll('img').forEach(image => {
+    image.decoding = 'async';
+    const isCritical = image.classList.contains('hero-image') ||
+      image.classList.contains('loading-logo') ||
+      Boolean(image.closest('.brand'));
+    image.loading = isCritical ? 'eager' : 'lazy';
+  });
+  const heroImage = document.querySelector('.hero-image');
+  if (heroImage) heroImage.fetchPriority = 'high';
+
   function setNav(open) {
     if (!overlay || !drawer || !menuBtn) return;
     overlay.classList.toggle('show', open);
