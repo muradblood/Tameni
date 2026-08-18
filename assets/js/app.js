@@ -19,7 +19,6 @@
   const menuBtn = document.getElementById('menu-btn');
   const closeBtn = document.getElementById('close-nav');
 
-  // تحسين تحميل الصور فقط دون أي تغيير بصري أو في تدفق الصفحات.
   document.querySelectorAll('img').forEach(image => {
     image.decoding = 'async';
     const isCritical = image.classList.contains('hero-image') ||
@@ -30,10 +29,12 @@
   const heroImage = document.querySelector('.hero-image');
   if (heroImage) heroImage.fetchPriority = 'high';
 
-  // زر حجز ثابت للجوال فقط مع نفس هوية الأزرار الحالية.
   const mobileBookingStyle = document.createElement('style');
   mobileBookingStyle.textContent = `
     .mobile-booking-bar{display:none}
+    .testimonial-photo{width:58px;height:58px;border-radius:50%;object-fit:cover;flex:0 0 58px;border:2px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+    .testimonial-disclaimer{margin-top:8px;color:#8a8a8a;font-size:.78rem}
+    .testimonial-model-badge{display:inline-flex;margin-top:5px;padding:3px 8px;border-radius:999px;background:var(--gold-soft);color:var(--gold-dark);font-size:.72rem;font-weight:800}
     @media (max-width: 768px){
       body{padding-bottom:82px}
       .mobile-booking-bar{position:fixed;right:0;bottom:0;left:0;z-index:79;display:block;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid rgba(0,0,0,.08);box-shadow:0 -8px 26px rgba(0,0,0,.08);backdrop-filter:blur(12px)}
@@ -47,7 +48,53 @@
   mobileBookingBar.innerHTML = '<a class="btn btn-primary" href="https://sarbussat.online/ar/i.php" target="_blank" rel="noopener noreferrer">حجز رحلات بين المدن ←</a>';
   document.body.appendChild(mobileBookingBar);
 
-  // تحسين تفاعل روابط الحجز فقط: منع النقر المتكرر لحظياً مع إبقاء نفس الرابط وطريقة الفتح.
+  // تحسين شكل قسم آراء العملاء مع صور توضيحية، دون الادعاء بأنها صور أصحاب الشهادات الفعلية.
+  const firstTestimonial = document.querySelector('.testimonial');
+  const testimonialsGrid = firstTestimonial?.parentElement;
+  const testimonialsSection = firstTestimonial?.closest('.section');
+  if (testimonialsGrid && testimonialsSection) {
+    const heading = testimonialsSection.querySelector('.section-heading');
+    if (heading && !heading.querySelector('.testimonial-disclaimer')) {
+      const note = document.createElement('p');
+      note.className = 'testimonial-disclaimer';
+      note.textContent = 'الصور والأسماء والتعليقات أدناه نماذج عرض توضيحية، ويمكن استبدالها بآراء عملاء حقيقية عند توفرها.';
+      heading.appendChild(note);
+    }
+
+    testimonialsGrid.innerHTML = `
+      <div class="card testimonial">
+        <div class="testimonial-head">
+          <img class="testimonial-photo" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160&q=80" alt="صورة توضيحية لعميل" loading="lazy" referrerpolicy="no-referrer">
+          <div><p class="testimonial-name">أحمد — نموذج عرض</p><p class="testimonial-route">الرياض - جدة</p><div class="stars">★★★★★</div><span class="testimonial-model-badge">صورة توضيحية</span></div>
+        </div>
+        <p class="testimonial-text">واجهة واضحة وسهلة، والوصول إلى خيارات الرحلات سريع.</p><span class="testimonial-date">تعليق توضيحي</span>
+      </div>
+      <div class="card testimonial">
+        <div class="testimonial-head">
+          <img class="testimonial-photo" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&h=160&q=80" alt="صورة توضيحية لعميلة" loading="lazy" referrerpolicy="no-referrer">
+          <div><p class="testimonial-name">نورة — نموذج عرض</p><p class="testimonial-route">جدة - مكة</p><div class="stars">★★★★☆</div><span class="testimonial-model-badge">صورة توضيحية</span></div>
+        </div>
+        <p class="testimonial-text">المعلومات مرتبة بشكل جيد وتعمل الصفحة بسرعة على الهاتف.</p><span class="testimonial-date">تعليق توضيحي</span>
+      </div>
+      <div class="card testimonial">
+        <div class="testimonial-head">
+          <img class="testimonial-photo" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=80" alt="صورة توضيحية لعميل" loading="lazy" referrerpolicy="no-referrer">
+          <div><p class="testimonial-name">فهد — نموذج عرض</p><p class="testimonial-route">الرياض - الدمام</p><div class="stars">★★★★★</div><span class="testimonial-model-badge">صورة توضيحية</span></div>
+        </div>
+        <p class="testimonial-text">التنقل بين المدن والرحلات سهل، والتصميم مريح وواضح.</p><span class="testimonial-date">تعليق توضيحي</span>
+      </div>`;
+  }
+
+  function trackBookingClick(link) {
+    const href = link.getAttribute('href') || '';
+    const isInternational = href.includes('/bus/ar/index.php');
+    const eventName = isInternational ? 'international_booking_click' : 'intercity_booking_click';
+    const detail = { event: eventName, booking_url: href, booking_type: isInternational ? 'international' : 'intercity' };
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(detail);
+    window.dispatchEvent(new CustomEvent('booking_click', { detail }));
+  }
+
   document.querySelectorAll('a[href^="https://sarbussat.online/"]').forEach(link => {
     const originalText = link.textContent;
     let locked = false;
@@ -58,6 +105,7 @@
         return;
       }
 
+      trackBookingClick(link);
       locked = true;
       link.setAttribute('aria-busy', 'true');
       link.textContent = 'جاري تحويلك…';
