@@ -1,0 +1,32 @@
+name: One-time GA4 booking event reliability
+on:
+  push:
+    paths:
+      - '.github/workflows/ga4-reliable-booking-events.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Improve booking event delivery only
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('assets/js/app.js')
+          s=p.read_text()
+          old="function trackBookingClick(link){const href=link.getAttribute('href')||'';const isInternational=href.includes('/bus/ar/index.php');const eventName=isInternational?'international_booking_click':'intercity_booking_click';const detail={event:eventName,booking_url:href,booking_type:isInternational?'international':'intercity',page_route:resolveRoute()};window.dataLayer=window.dataLayer||[];window.dataLayer.push(detail);if(typeof window.gtag==='function'){window.gtag('event',eventName,{booking_url:href,booking_type:detail.booking_type,page_route:detail.page_route});}window.dispatchEvent(new CustomEvent('booking_click',{detail}));}"
+          new="function trackBookingClick(link){const href=link.href||link.getAttribute('href')||'';const isInternational=href.includes('/bus/ar/index.php');const eventName=isInternational?'international_booking_click':'intercity_booking_click';const detail={event:eventName,booking_url:href,booking_type:isInternational?'international':'intercity',page_route:resolveRoute()};if(typeof window.gtag==='function'){window.gtag('event',eventName,{booking_url:href,booking_type:detail.booking_type,page_route:detail.page_route,transport_type:'beacon'});}else{window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:eventName,booking_url:href,booking_type:detail.booking_type,page_route:detail.page_route});}window.dispatchEvent(new CustomEvent('booking_click',{detail}));}"
+          if old not in s: raise SystemExit('Expected booking tracking code not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/js/app.js
+          git commit -m 'Improve GA4 booking event delivery'
+          git push origin main
