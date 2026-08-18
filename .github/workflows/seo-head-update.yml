@@ -57,7 +57,6 @@ jobs:
   <meta name="twitter:description" content="خدمات النقل الجماعي والوجهات والمدن وخيارات حجز الرحلات بين المدن والرحلات الدولية.">
   <meta name="twitter:image" content="{image}">'''
 
-          # Remove any existing OG/Twitter tags we manage, then insert one clean block.
           managed = [
               r'\s*<meta\s+property=["\']og:(?:locale|type|title|description|url|image|image:alt)["\'][^>]*>',
               r'\s*<meta\s+name=["\']twitter:(?:card|title|description|image)["\'][^>]*>'
@@ -70,7 +69,6 @@ jobs:
           s = re.sub(r'\s*<script\s+type=["\']application/ld\+json["\']>.*?</script>', '', s, flags=re.I|re.S)
           s = s.replace('</head>', '  ' + structured + '\n</head>', 1)
 
-          # Safety checks: do not write if core document markers are missing.
           required = ['<html', '<head', '</head>', '<body', '</body>', '<main', 'assets/js/app.js']
           missing = [x for x in required if x not in s]
           if missing:
@@ -79,10 +77,11 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Verify only head changed structurally
+      - name: Verify document integrity
         run: |
           grep -q '<link rel="canonical" href="https://tameni-zeta.vercel.app/">' index.html
           grep -q 'application/ld+json' index.html
+          grep -q '<main' index.html
           grep -q 'assets/js/app.js' index.html
 
       - name: Commit SEO metadata
