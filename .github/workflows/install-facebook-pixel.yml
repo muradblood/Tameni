@@ -38,3 +38,5 @@ jobs:
           git add index.html
           git commit -m 'Install Facebook Pixel 2260146441191674'
           git push origin main
+      - name: Mark rerun
+        run: echo rerun
