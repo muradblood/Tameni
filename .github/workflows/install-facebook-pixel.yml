@@ -1,0 +1,40 @@
+name: One-time Facebook Pixel install
+on:
+  push:
+    paths:
+      - '.github/workflows/install-facebook-pixel.yml'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Add Facebook Pixel only
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          pixel_id='2260146441191674'
+          script="""  <!-- Facebook Pixel Code -->\n  <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js'); fbq('init', '2260146441191674'); fbq('track', 'PageView');</script>\n  <!-- End Facebook Pixel Code -->\n"""
+          noscript='  <!-- Facebook Pixel Code (noscript) -->\n  <noscript><img height="1" width="1" src="https://www.facebook.com/tr?id=2260146441191674&ev=PageView&noscript=1" alt=""></noscript>\n'
+          if pixel_id in s:
+              raise SystemExit('Facebook Pixel already exists')
+          if '<head>\n' not in s or '<body>\n' not in s:
+              raise SystemExit('Expected head/body markers not found')
+          s=s.replace('<head>\n','<head>\n'+script,1)
+          s=s.replace('<body>\n','<body>\n'+noscript,1)
+          p.write_text(s)
+          check=p.read_text()
+          if check.count(pixel_id) < 2 or "fbq('track', 'PageView')" not in check:
+              raise SystemExit('Facebook Pixel install verification failed')
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Install Facebook Pixel 2260146441191674'
+          git push origin main
