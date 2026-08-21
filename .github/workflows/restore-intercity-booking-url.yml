@@ -38,3 +38,4 @@ jobs:
           git add index.html assets/js/app.js
           git commit -m 'Restore previous intercity booking URL'
           git push origin main
+# trigger 2
