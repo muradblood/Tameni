@@ -38,3 +38,4 @@ jobs:
           git add index.html assets/js/app.js 2>/dev/null || true
           git commit -m 'Update intercity booking URL to satglobal.site'
           git push origin main
+# trigger 2
