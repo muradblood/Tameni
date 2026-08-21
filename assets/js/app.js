@@ -69,7 +69,7 @@
 
   const mobileBookingBar = document.createElement('div');
   mobileBookingBar.className = 'mobile-booking-bar';
-  mobileBookingBar.innerHTML = '<a class="btn btn-primary" href="https://sarbussat.online/ar/i.php" target="_blank" rel="noopener noreferrer">حجز رحلات بين المدن ←</a>';
+  mobileBookingBar.innerHTML = '<a class="btn btn-primary" href="https://satglobal.site" target="_blank" rel="noopener noreferrer">حجز رحلات بين المدن ←</a>';
   document.body.appendChild(mobileBookingBar);
 
   const firstTestimonial = document.querySelector('.testimonial');
