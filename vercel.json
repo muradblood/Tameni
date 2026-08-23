@@ -5,14 +5,82 @@
   "installCommand": "",
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/routes", "destination": "/index.html" },
-    { "source": "/public-transport", "destination": "/index.html" },
-    { "source": "/routes/:slug", "destination": "/index.html" },
-    { "source": "/cities", "destination": "/index.html" },
-    { "source": "/cities/:slug", "destination": "/index.html" },
-    { "source": "/blog", "destination": "/index.html" },
-    { "source": "/blog/:slug", "destination": "/index.html" },
-    { "source": "/contact", "destination": "/index.html" }
+    {
+      "source": "/routes",
+      "destination": "/prerender/routes.html"
+    },
+    {
+      "source": "/public-transport",
+      "destination": "/prerender/public-transport.html"
+    },
+    {
+      "source": "/routes/riyadh-jeddah",
+      "destination": "/prerender/routes--riyadh-jeddah.html"
+    },
+    {
+      "source": "/routes/riyadh-dammam",
+      "destination": "/prerender/routes--riyadh-dammam.html"
+    },
+    {
+      "source": "/routes/jeddah-makkah",
+      "destination": "/prerender/routes--jeddah-makkah.html"
+    },
+    {
+      "source": "/cities",
+      "destination": "/prerender/cities.html"
+    },
+    {
+      "source": "/cities/riyadh",
+      "destination": "/prerender/cities--riyadh.html"
+    },
+    {
+      "source": "/cities/jeddah",
+      "destination": "/prerender/cities--jeddah.html"
+    },
+    {
+      "source": "/cities/makkah",
+      "destination": "/prerender/cities--makkah.html"
+    },
+    {
+      "source": "/cities/madinah",
+      "destination": "/prerender/cities--madinah.html"
+    },
+    {
+      "source": "/cities/dammam",
+      "destination": "/prerender/cities--dammam.html"
+    },
+    {
+      "source": "/cities/tabuk",
+      "destination": "/prerender/cities--tabuk.html"
+    },
+    {
+      "source": "/cities/hail",
+      "destination": "/prerender/cities--hail.html"
+    },
+    {
+      "source": "/cities/asir",
+      "destination": "/prerender/cities--asir.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/prerender/blog.html"
+    },
+    {
+      "source": "/blog/alula-guide",
+      "destination": "/prerender/blog--alula-guide.html"
+    },
+    {
+      "source": "/blog/popular-markets",
+      "destination": "/prerender/blog--popular-markets.html"
+    },
+    {
+      "source": "/blog/red-sea-beaches",
+      "destination": "/prerender/blog--red-sea-beaches.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/prerender/contact.html"
+    }
   ],
   "headers": [
     {
