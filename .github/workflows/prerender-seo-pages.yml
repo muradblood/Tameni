@@ -75,11 +75,8 @@ jobs:
               s=re.sub(r'<meta name="twitter:description" content="[^"]*">', f'<meta name="twitter:description" content="{desc}">', s, count=1)
               s=s.replace('id="page-home" class="page active main-offset"','id="page-home" class="page main-offset"',1)
               target=f'id="{page_id}" class="page main-offset"'
-              target_article=f'id="{page_id}" class="page main-offset"'
               if target in s:
                   s=s.replace(target, f'id="{page_id}" class="page active main-offset"',1)
-              elif target_article in s:
-                  s=s.replace(target_article, f'id="{page_id}" class="page active main-offset"',1)
               fname=path.strip('/').replace('/','--')+'.html'
               (prerender/fname).write_text(s)
               rewrites.append({'source':path,'destination':f'/prerender/{fname}'})
@@ -109,3 +106,4 @@ jobs:
           git add index.html assets/js/app.js vercel.json prerender/
           git commit -m 'Prerender 19 SEO routes for direct crawling'
           git push origin main
+# trigger
