@@ -34,3 +34,4 @@ jobs:
           git add prerender/
           git commit -m 'Fix prerender asset paths for nested routes'
           git push origin main
+# trigger
