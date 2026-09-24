@@ -98,3 +98,44 @@
   const observer='IntersectionObserver'in window?new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target);}});},{threshold:.08}):null;document.querySelectorAll('.fade-up').forEach(el=>observer?observer.observe(el):el.classList.add('visible'));
   const form=document.getElementById('contact-form');const success=document.getElementById('contact-success');form?.addEventListener('submit',event=>{event.preventDefault();if(!form.checkValidity()){form.reportValidity();return;}const payload={name:document.getElementById('contact-name')?.value.trim(),email:document.getElementById('contact-email')?.value.trim(),message:document.getElementById('contact-message')?.value.trim(),createdAt:new Date().toISOString()};try{localStorage.setItem('transport_last_contact',JSON.stringify(payload));}catch(_){}form.reset();form.hidden=true;success?.classList.add('show');});
 })();
+
+// Optional hero enhancement: no animation dependencies on the critical path.
+(() => {
+  const hero = document.querySelector('#page-home .hero');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const connection = navigator.connection;
+  const allowed = () => !reduced.matches && !connection?.saveData &&
+    !/^(slow-2g|2g|3g)$/.test(connection?.effectiveType || '') &&
+    !(navigator.deviceMemory && navigator.deviceMemory <= 4) &&
+    !(navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+  if (!hero || !allowed() || !window.IntersectionObserver) return;
+  let visible = false, scheduled = false, started = false, controller;
+  const schedule = () => {
+    if (scheduled || started || !visible || document.hidden || !allowed() || document.readyState !== 'complete') return;
+    scheduled = true;
+    const start = async () => {
+      scheduled = false;
+      if (!visible || document.hidden || !allowed() || started) return;
+      started = true;
+      try {
+        const { mountHero } = await import('/assets/js/hero-effects.js');
+        if (!allowed()) return;
+        controller = await mountHero(hero, () => visible && !document.hidden && allowed());
+        controller.sync();
+      } catch (_) { /* Keep the original, fully usable hero on failure. */ }
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(start);
+    else setTimeout(start, 2000);
+  };
+  new IntersectionObserver(entries => {
+    visible = entries[0].isIntersecting;
+    controller?.sync();
+    schedule();
+  }, { threshold: 0.05 }).observe(hero);
+  document.addEventListener('visibilitychange', () => { controller?.sync(); schedule(); });
+  reduced.addEventListener('change', () => { controller?.sync(); schedule(); });
+  connection?.addEventListener('change', () => { controller?.sync(); schedule(); });
+  window.addEventListener('load', schedule, { once: true });
+  window.addEventListener('pagehide', () => controller?.pause());
+  window.addEventListener('pageshow', () => { controller?.sync(); schedule(); });
+})();
