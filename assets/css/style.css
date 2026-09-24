@@ -144,6 +144,7 @@ button{cursor:pointer}
 .check-list li{display:flex;align-items:flex-start;gap:11px;color:#555}
 .check-list li::before{content:"✓";display:grid;place-items:center;flex:0 0 25px;height:25px;border-radius:50%;background:var(--gold-soft);color:var(--gold-dark);font-weight:900}
 .route-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.route-carousel-controls{display:none}
 .detail-layout{display:grid;gap:26px}
 .detail-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
 .mini-stat{padding:18px;text-align:center}
@@ -240,6 +241,20 @@ textarea.form-control{resize:vertical;min-height:130px}
   .feature-card img{transition:transform .25s ease,filter .25s ease}
 }
 @media (max-width:640px){.trust-strip{margin-top:-22px}.trust-grid{grid-template-columns:1fr;padding:10px}.trust-grid>div{border-left:0;border-bottom:1px solid var(--border);padding:10px}.trust-grid>div:last-child{border-bottom:0}.hero{min-height:520px}}
+
+@media (max-width:640px){
+  .route-carousel-ready .route-carousel-viewport{overflow:hidden;margin-inline:-12px;padding-inline:12px}
+  .route-carousel-ready .route-grid{display:flex;gap:12px;touch-action:pan-y pinch-zoom}
+  .route-carousel-ready .route-grid>.media-card{flex:0 0 84%;min-width:0}
+  .route-carousel-ready .route-carousel-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:20px}
+  .route-carousel-controls button{width:44px;height:44px;border:1px solid var(--gold);border-radius:50%;background:#fff;color:var(--gold-dark);font-size:1.3rem;line-height:1}
+  .route-carousel-controls button:disabled{opacity:.35;cursor:not-allowed}
+  .route-carousel-count{min-width:50px;text-align:center;color:var(--muted);font-weight:800;direction:ltr}
+}
+html.lenis,html.lenis body{height:auto}
+.lenis:not(.lenis-autoToggle).lenis-stopped{overflow:clip}
+.lenis [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-smooth iframe{pointer-events:none}
 
 /* The mid-page visual is complete before its optional WebGL layer arrives. */
 .journey-section{background:radial-gradient(ellipse at 50% 48%,#1f3650 0%,#101b2b 62%,#0a111d 100%);color:#fff;overflow:hidden}
