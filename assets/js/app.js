@@ -121,12 +121,23 @@
   const eligible = () => !reduced.matches && !connection?.saveData &&
     !/^(slow-2g|2g)$/.test(connection?.effectiveType || '') &&
     !(navigator.deviceMemory && navigator.deviceMemory <= 2);
+  let webglSupported;
+  const hasWebGL = () => {
+    if (webglSupported !== undefined) return webglSupported;
+    try {
+      const probe = document.createElement('canvas');
+      const context = probe.getContext('webgl2') || probe.getContext('webgl');
+      webglSupported = !!context;
+      context?.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch (_) { webglSupported = false; }
+    return webglSupported;
+  };
   let near = false, visible = false, pending = false, controller = null;
   const sync = () => controller?.sync(visible && !document.hidden && eligible() && section.closest('.page.active'));
   const load = () => {
     if (pending || controller || !near || !eligible() || document.hidden || !section.closest('.page.active')) return;
     const begin = async () => {
-      if (!near || !eligible() || document.hidden || !section.closest('.page.active')) return;
+      if (!near || !eligible() || !hasWebGL() || document.hidden || !section.closest('.page.active')) return;
       pending = true;
       try {
         const { mountJourney } = await import('/assets/js/journey-bundle.js');
