@@ -93,51 +93,73 @@
   function resolveRoute(){if(window.location.hash){const hashRoute=window.location.hash.slice(1);if(routeMap[hashRoute])return hashRoute;}const path=window.location.pathname.replace(/\/$/,'')||'/';return pathRouteMap[path]||'home';}
   function navigate(){const route=resolveRoute();const pageId=routeMap[route]||routeMap.home;document.querySelectorAll('.page').forEach(page=>page.classList.remove('active'));document.getElementById(pageId)?.classList.add('active');document.querySelectorAll('[data-route-link]').forEach(link=>{link.classList.toggle('active',link.getAttribute('href')===(routePaths[route]||'/'));});setNav(false);window.scrollTo({top:0,behavior:'auto'});updateRouteSeo(routeMap[route]?route:'home');}
   menuBtn?.addEventListener('click',()=>setNav(true));closeBtn?.addEventListener('click',()=>setNav(false));overlay?.addEventListener('click',()=>setNav(false));document.addEventListener('keydown',event=>{if(event.key==='Escape')setNav(false);});window.addEventListener('hashchange',navigate);window.addEventListener('popstate',navigate);navigate();
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href^="/"]');
+    if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.target || link.hasAttribute('download')) return;
+    const url = new URL(link.href);
+    if (url.origin !== location.origin || !pathRouteMap[url.pathname.replace(/\/$/, '') || '/']) return;
+    event.preventDefault();
+    if (url.pathname === location.pathname && url.search === location.search) { setNav(false); return; }
+    history.pushState({}, '', url.pathname + url.search);
+    const changePage = () => { navigate(); document.dispatchEvent(new Event('site:navigate')); };
+    if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+      document.startViewTransition(changePage);
+    else changePage();
+  });
 
   document.querySelectorAll('.faq-toggle').forEach(button=>{button.addEventListener('click',()=>{const answer=button.nextElementSibling;const isOpen=button.getAttribute('aria-expanded')==='true';button.setAttribute('aria-expanded',String(!isOpen));answer?.classList.toggle('open',!isOpen);});});
   const observer='IntersectionObserver'in window?new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target);}});},{threshold:.08}):null;document.querySelectorAll('.fade-up').forEach(el=>observer?observer.observe(el):el.classList.add('visible'));
   const form=document.getElementById('contact-form');const success=document.getElementById('contact-success');form?.addEventListener('submit',event=>{event.preventDefault();if(!form.checkValidity()){form.reportValidity();return;}const payload={name:document.getElementById('contact-name')?.value.trim(),email:document.getElementById('contact-email')?.value.trim(),message:document.getElementById('contact-message')?.value.trim(),createdAt:new Date().toISOString()};try{localStorage.setItem('transport_last_contact',JSON.stringify(payload));}catch(_){}form.reset();form.hidden=true;success?.classList.add('show');});
 })();
 
-// Optional hero enhancement: no animation dependencies on the critical path.
+// The mid-page scene is a separate tree-shaken module, loaded only near the viewport.
 (() => {
-  const hero = document.querySelector('#page-home .hero');
+  const section = document.getElementById('three-canvas-container');
+  if (!section || !('IntersectionObserver' in window)) return;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const connection = navigator.connection;
-  const allowed = () => !reduced.matches && !connection?.saveData &&
-    !/^(slow-2g|2g|3g)$/.test(connection?.effectiveType || '') &&
-    !(navigator.deviceMemory && navigator.deviceMemory <= 4) &&
-    !(navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-  if (!hero || !allowed() || !window.IntersectionObserver) return;
-  let visible = false, scheduled = false, started = false, controller;
-  const schedule = () => {
-    if (scheduled || started || !visible || document.hidden || !allowed() || document.readyState !== 'complete') return;
-    scheduled = true;
-    const start = async () => {
-      scheduled = false;
-      if (!visible || document.hidden || !allowed() || started) return;
-      started = true;
-      try {
-        const { mountHero } = await import('/assets/js/hero-effects.js');
-        if (!allowed()) return;
-        controller = await mountHero(hero, () => visible && !document.hidden && allowed());
-        controller.sync();
-      } catch (_) { /* Keep the original, fully usable hero on failure. */ }
-    };
-    if ('requestIdleCallback' in window) requestIdleCallback(start);
-    else setTimeout(start, 2000);
+  const eligible = () => !reduced.matches && !connection?.saveData &&
+    !/^(slow-2g|2g)$/.test(connection?.effectiveType || '') &&
+    !(navigator.deviceMemory && navigator.deviceMemory <= 2);
+  let webglSupported;
+  const hasWebGL = () => {
+    if (webglSupported !== undefined) return webglSupported;
+    try {
+      const probe = document.createElement('canvas');
+      const context = probe.getContext('webgl2') || probe.getContext('webgl');
+      webglSupported = !!context;
+      context?.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch (_) { webglSupported = false; }
+    return webglSupported;
   };
-  new IntersectionObserver(entries => {
-    visible = entries[0].isIntersecting;
-    controller?.sync();
-    schedule();
-  }, { threshold: 0.05 }).observe(hero);
-  document.addEventListener('visibilitychange', () => { controller?.sync(); schedule(); });
-  reduced.addEventListener('change', () => { controller?.sync(); schedule(); });
-  connection?.addEventListener('change', () => { controller?.sync(); schedule(); });
-  window.addEventListener('load', schedule, { once: true });
-  window.addEventListener('pagehide', () => controller?.pause());
-  window.addEventListener('pageshow', () => { controller?.sync(); schedule(); });
+  let near = false, visible = false, pending = false, controller = null;
+  const sync = () => controller?.sync(visible && !document.hidden && eligible() && section.closest('.page.active'));
+  const load = () => {
+    if (pending || controller || !near || !eligible() || document.hidden || !section.closest('.page.active')) return;
+    const begin = async () => {
+      if (!near || !eligible() || !hasWebGL() || document.hidden || !section.closest('.page.active')) return;
+      pending = true;
+      try {
+        const { mountJourney } = await import('/assets/js/journey-bundle.js');
+        if (!eligible()) return;
+        controller = await mountJourney(section);
+        sync();
+      } catch (error) { console.warn('تعذر تشغيل المشهد الاختياري', error); }
+      finally { pending = false; }
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(begin, { timeout: 1500 });
+    else setTimeout(begin, 200);
+  };
+  new IntersectionObserver(entries => { near = entries[0].isIntersecting; if (near) load(); }, { rootMargin: '200px' }).observe(section);
+  new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); }, { threshold: .01 }).observe(section);
+  document.addEventListener('visibilitychange', () => { sync(); load(); });
+  window.addEventListener('popstate', sync);
+  window.addEventListener('hashchange', sync);
+  window.addEventListener('pagehide', () => controller?.sync(false));
+  window.addEventListener('pageshow', () => { sync(); load(); });
+  reduced.addEventListener('change', () => { sync(); load(); });
+  connection?.addEventListener('change', () => { sync(); load(); });
+  document.addEventListener('site:navigate', () => { sync(); load(); });
 })();
 
 // Small, event-driven card effects: no dependency and no idle animation loop.
