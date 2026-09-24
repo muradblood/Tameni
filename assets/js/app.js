@@ -139,3 +139,57 @@
   window.addEventListener('pagehide', () => controller?.pause());
   window.addEventListener('pageshow', () => { controller?.sync(); schedule(); });
 })();
+
+// Small, event-driven card effects: no dependency and no idle animation loop.
+(() => {
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const mouse = matchMedia('(hover: hover) and (pointer: fine)');
+  const cards = document.querySelectorAll('.feature-card, .info-card, .media-card, .city-card');
+  let active = null, frame = 0, rect, pointerX = 0, pointerY = 0;
+  const enabled = () => mouse.matches && !motion.matches;
+  const reset = () => {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    if (!active) return;
+    active.classList.remove('card-motion-active');
+    ['--card-rx', '--card-ry', '--card-x', '--card-y'].forEach(name => active.style.removeProperty(name));
+    active = null;
+  };
+  const draw = () => {
+    frame = 0;
+    if (!active || !enabled()) return reset();
+    const x = Math.max(0, Math.min(1, (pointerX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (pointerY - rect.top) / rect.height));
+    active.style.setProperty('--card-rx', `${(0.5 - y) * 5}deg`);
+    active.style.setProperty('--card-ry', `${(x - 0.5) * 5}deg`);
+    active.style.setProperty('--card-x', `${x * 100}%`);
+    active.style.setProperty('--card-y', `${y * 100}%`);
+  };
+  cards.forEach(card => {
+    card.classList.add('card-motion');
+    const shine = document.createElement('span');
+    shine.className = 'card-motion-shine';
+    shine.setAttribute('aria-hidden', 'true');
+    card.appendChild(shine);
+    card.addEventListener('pointerenter', event => {
+      if (!enabled() || event.pointerType !== 'mouse') return;
+      reset();
+      rect = card.getBoundingClientRect();
+      active = card;
+      card.classList.add('card-motion-active');
+    });
+    card.addEventListener('pointermove', event => {
+      if (active !== card || event.pointerType !== 'mouse') return;
+      pointerX = event.clientX; pointerY = event.clientY;
+      if (!frame) frame = requestAnimationFrame(draw);
+    }, { passive: true });
+    card.addEventListener('pointerleave', reset);
+    card.addEventListener('pointercancel', reset);
+  });
+  motion.addEventListener('change', reset);
+  mouse.addEventListener('change', reset);
+  window.addEventListener('scroll', reset, { passive: true });
+  window.addEventListener('resize', reset, { passive: true });
+  window.addEventListener('blur', reset);
+  document.addEventListener('visibilitychange', reset);
+})();
