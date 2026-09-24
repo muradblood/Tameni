@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "three": "^0.186.1"
+  },
+  "scripts": {
+    "build:effects": "esbuild assets/js/journey-source.js --bundle --format=esm --minify --target=es2020 --outfile=assets/js/journey-bundle.js"
+  }
+}
