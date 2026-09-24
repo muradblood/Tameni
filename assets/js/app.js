@@ -87,7 +87,7 @@
   function trackBookingClick(link){const href=link.href||link.getAttribute('href')||'';const isInternational=href.includes('bushafelat.online/bus/');const eventName=isInternational?'international_booking_click':'intercity_booking_click';const detail={event:eventName,booking_url:href,booking_type:isInternational?'international':'intercity',page_route:resolveRoute()};if(typeof window.gtag==='function'){window.gtag('event',eventName,{booking_url:href,booking_type:detail.booking_type,page_route:detail.page_route,transport_type:'beacon'});}else{window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:eventName,booking_url:href,booking_type:detail.booking_type,page_route:detail.page_route});}window.dispatchEvent(new CustomEvent('booking_click',{detail}));}
   document.querySelectorAll('a[href^="https://bushafelat.online/ar/i.php"],a[href^="https://bushafelat.online/bus/ar/index.php"]').forEach(link=>{preserveCampaignParams(link);const originalText=link.textContent;let locked=false;link.addEventListener('click',event=>{if(locked){event.preventDefault();return;}trackBookingClick(link);locked=true;link.setAttribute('aria-busy','true');link.textContent='جاري تحويلك…';window.setTimeout(()=>{locked=false;link.removeAttribute('aria-busy');link.textContent=originalText;},1500);});});
 
-  function setNav(open){if(!overlay||!drawer||!menuBtn)return;overlay.classList.toggle('show',open);drawer.classList.toggle('show',open);document.body.classList.toggle('nav-open',open);menuBtn.setAttribute('aria-expanded',String(open));drawer.setAttribute('aria-hidden',String(!open));drawer.inert=!open;if(open)closeBtn?.focus();}
+  function setNav(open){if(!overlay||!drawer||!menuBtn)return;overlay.classList.toggle('show',open);drawer.classList.toggle('show',open);document.body.classList.toggle('nav-open',open);menuBtn.setAttribute('aria-expanded',String(open));drawer.setAttribute('aria-hidden',String(!open));drawer.inert=!open;document.dispatchEvent(new CustomEvent('site:nav-toggle',{detail:{open}}));if(open)closeBtn?.focus();}
   function setMeta(selector,value,attr='content'){const element=document.head.querySelector(selector);if(element&&value)element.setAttribute(attr,value);}
   function updateRouteSeo(route){const seo=routeSeo[route]||routeSeo.home;const base='https://satpcosa.vercel.app';const path=routePaths[route]||'/';const canonical=`${base}${path}`;document.title=seo.title;setMeta('meta[name="description"]',seo.description);setMeta('meta[property="og:title"]',seo.title);setMeta('meta[property="og:description"]',seo.description);setMeta('meta[property="og:url"]',canonical);setMeta('meta[name="twitter:title"]',seo.title);setMeta('meta[name="twitter:description"]',seo.description);setMeta('link[rel="canonical"]',canonical,'href');}
   function resolveRoute(){if(window.location.hash){const hashRoute=window.location.hash.slice(1);if(routeMap[hashRoute])return hashRoute;}const path=window.location.pathname.replace(/\/$/,'')||'/';return pathRouteMap[path]||'home';}
@@ -110,6 +110,62 @@
   document.querySelectorAll('.faq-toggle').forEach(button=>{button.addEventListener('click',()=>{const answer=button.nextElementSibling;const isOpen=button.getAttribute('aria-expanded')==='true';button.setAttribute('aria-expanded',String(!isOpen));answer?.classList.toggle('open',!isOpen);});});
   const observer='IntersectionObserver'in window?new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('visible');observer.unobserve(entry.target);}});},{threshold:.08}):null;document.querySelectorAll('.fade-up').forEach(el=>observer?observer.observe(el):el.classList.add('visible'));
   const form=document.getElementById('contact-form');const success=document.getElementById('contact-success');form?.addEventListener('submit',event=>{event.preventDefault();if(!form.checkValidity()){form.reportValidity();return;}const payload={name:document.getElementById('contact-name')?.value.trim(),email:document.getElementById('contact-email')?.value.trim(),message:document.getElementById('contact-message')?.value.trim(),createdAt:new Date().toISOString()};try{localStorage.setItem('transport_last_contact',JSON.stringify(payload));}catch(_){}form.reset();form.hidden=true;success?.classList.add('show');});
+})();
+
+// The mobile trip carousel loads only when the routes page is opened.
+(() => {
+  const root = document.querySelector('#page-routes .route-showcase');
+  if (!root) return;
+  const mobile = matchMedia('(max-width: 640px)');
+  let controller = null, pending = false;
+  const sync = async () => {
+    const active = mobile.matches && Boolean(root.closest('.page.active'));
+    if (!active) { controller?.destroy(); controller = null; return; }
+    if (controller || pending) return;
+    pending = true;
+    try {
+      const { mountRouteCarousel } = await import('/assets/js/route-carousel-bundle.js');
+      if (mobile.matches && root.closest('.page.active')) controller = mountRouteCarousel(root);
+    } catch (error) { console.warn('تعذر تشغيل استعراض الرحلات', error); }
+    finally { pending = false; }
+  };
+  mobile.addEventListener('change', sync);
+  document.addEventListener('site:navigate', sync);
+  window.addEventListener('popstate', () => requestAnimationFrame(sync));
+  window.addEventListener('hashchange', () => requestAnimationFrame(sync));
+  sync();
+})();
+
+// Smooth wheel scrolling is optional and never loaded during the initial paint.
+(() => {
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const allowed = () => finePointer.matches && !reduced.matches && !navigator.connection?.saveData;
+  let controller = null, pending = false;
+  const sync = () => {
+    if (!allowed()) { controller?.destroy(); controller = null; return; }
+    if (controller) {
+      if (document.hidden || document.body.classList.contains('nav-open')) controller.stop();
+      else controller.start();
+    }
+  };
+  const initialize = async () => {
+    if (!allowed() || controller || pending) return;
+    pending = true;
+    try {
+      const { startSmoothScroll } = await import('/assets/js/smooth-scroll-bundle.js');
+      if (allowed()) { controller = startSmoothScroll(); sync(); }
+    } catch (error) { console.warn('تعذر تشغيل التمرير السلس', error); }
+    finally { pending = false; }
+  };
+  window.addEventListener('wheel', initialize, { passive: true });
+  finePointer.addEventListener('change', sync);
+  reduced.addEventListener('change', sync);
+  navigator.connection?.addEventListener('change', sync);
+  document.addEventListener('visibilitychange', sync);
+  document.addEventListener('site:nav-toggle', sync);
+  document.addEventListener('site:navigate', () => controller?.scrollToTop());
+  window.addEventListener('popstate', () => controller?.scrollToTop());
 })();
 
 // The mid-page scene is a separate tree-shaken module, loaded only near the viewport.
