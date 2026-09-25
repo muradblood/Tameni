@@ -112,6 +112,44 @@
   const form=document.getElementById('contact-form');const success=document.getElementById('contact-success');form?.addEventListener('submit',event=>{event.preventDefault();if(!form.checkValidity()){form.reportValidity();return;}const payload={name:document.getElementById('contact-name')?.value.trim(),email:document.getElementById('contact-email')?.value.trim(),message:document.getElementById('contact-message')?.value.trim(),createdAt:new Date().toISOString()};try{localStorage.setItem('transport_last_contact',JSON.stringify(payload));}catch(_){}form.reset();form.hidden=true;success?.classList.add('show');});
 })();
 
+// Reveal the journey once; on narrow screens its progress follows the scrollable steps.
+(() => {
+  const section = document.querySelector('#page-home .journey-section');
+  const track = section?.querySelector('.journey-steps');
+  if (!track) return;
+  const steps = [...track.querySelectorAll('.journey-step')];
+  const mobile = matchMedia('(max-width: 640px)');
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    if (!mobile.matches) {
+      steps.forEach(step => step.classList.remove('is-current'));
+      track.style.setProperty('--journey-progress', section.classList.contains('journey-in-view') ? '100%' : '0%');
+      return;
+    }
+    const center = track.getBoundingClientRect().left + track.clientWidth / 2;
+    const index = steps.reduce((best, step, i) =>
+      Math.abs(step.getBoundingClientRect().left + step.clientWidth / 2 - center) <
+      Math.abs(steps[best].getBoundingClientRect().left + steps[best].clientWidth / 2 - center) ? i : best, 0);
+    steps.forEach((step, i) => step.classList.toggle('is-current', i === index));
+    track.style.setProperty('--journey-progress', `${(index + 1) / steps.length * 100}%`);
+  };
+  const queue = () => { if (!frame) frame = requestAnimationFrame(update); };
+  section.classList.add('journey-enhanced');
+  track.addEventListener('scroll', queue, { passive: true });
+  mobile.addEventListener('change', queue);
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      if (!entries[0].isIntersecting) return;
+      section.classList.add('journey-in-view');
+      queue();
+      observer.disconnect();
+    }, { threshold: .15 });
+    observer.observe(section);
+  } else section.classList.add('journey-in-view');
+  queue();
+})();
+
 // The mobile trip carousel loads only when the routes page is opened.
 (() => {
   const root = document.querySelector('#page-routes .route-showcase');
