@@ -212,7 +212,9 @@
     // Older browsers can still load the scene after the page is ready.
     near = visible = true;
   }
-  const afterLoad = () => setTimeout(() => { heroReady = true; load(); }, 1200);
+  // Give slower mobile devices time to finish their first interaction and paint.
+  const afterLoad = () => setTimeout(() => { heroReady = true; load(); },
+    connection?.saveData || (navigator.deviceMemory && navigator.deviceMemory <= 2) || window.innerWidth < 640 ? 5000 : 1200);
   if (document.readyState === 'complete') afterLoad();
   else window.addEventListener('load', afterLoad, { once: true });
   document.addEventListener('visibilitychange', () => { sync(); load(); });
