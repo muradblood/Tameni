@@ -1,10 +1,9 @@
 import { Scene, PerspectiveCamera, WebGLRenderer, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, LineSegments, LineBasicMaterial, Group, AdditiveBlending } from 'three';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-export function mountJourney(container) {
+export function mountHeroScene(container) {
   const canvas = document.createElement('canvas');
-  canvas.className = 'journey-canvas';
+  canvas.className = 'hero-three-canvas';
   canvas.setAttribute('aria-hidden', 'true');
   let renderer;
   try { renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'low-power' }); }
@@ -14,9 +13,10 @@ export function mountJourney(container) {
   const camera = new PerspectiveCamera(42, 1, .1, 30);
   camera.position.z = 7;
   const group = new Group();
+  group.position.y = -.65;
   scene.add(group);
   const dots = [], links = [];
-  const rings = 12, columns = 24;
+  const rings = 10, columns = 18;
   for (let row = 1; row < rings; row++) {
     const phi = Math.PI * row / rings;
     for (let col = 0; col < columns; col++) {
@@ -37,14 +37,14 @@ export function mountJourney(container) {
   dotGeometry.setAttribute('position', new Float32BufferAttribute(dots, 3));
   const lineGeometry = new BufferGeometry();
   lineGeometry.setAttribute('position', new Float32BufferAttribute(links, 3));
-  const dotMaterial = new PointsMaterial({ color: 0xffd978, size: .055, transparent: true, opacity: .9, depthWrite: false, blending: AdditiveBlending });
-  const lineMaterial = new LineBasicMaterial({ color: 0xe3b94d, transparent: true, opacity: .27, depthWrite: false });
+  const dotMaterial = new PointsMaterial({ color: 0xffd978, size: .055, transparent: true, opacity: .75, depthWrite: false, blending: AdditiveBlending });
+  const lineMaterial = new LineBasicMaterial({ color: 0xe3b94d, transparent: true, opacity: .22, depthWrite: false });
   group.add(new LineSegments(lineGeometry, lineMaterial), new Points(dotGeometry, dotMaterial));
   let running = false, frame = 0, last = 0, targetX = 0, targetY = 0;
   const resize = () => {
     const { width, height } = container.getBoundingClientRect();
     if (!width || !height) return;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.position.z = width < 600 ? 9 : 7;
@@ -75,31 +75,17 @@ export function mountJourney(container) {
   const resizeObserver = new ResizeObserver(resize);
   resizeObserver.observe(container);
   resize();
-  gsap.to(canvas, { opacity: 1, duration: .7, ease: 'power2.out' });
-
-  // ScrollTrigger is registered only inside this lazy chunk, after the section is near view.
-  gsap.registerPlugin(ScrollTrigger);
-  const steps = container.parentElement.querySelectorAll('.journey-step');
-  const triggers = [];
-  if (matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-    steps.forEach((step, index) => {
-      gsap.set(step, { opacity: .7, y: 12 });
-      const tween = gsap.to(step, {
-        opacity: 1, y: 0, duration: .55, delay: index * .07, ease: 'power2.out',
-        scrollTrigger: { trigger: step, start: 'top 90%', once: true }
-      });
-      triggers.push(tween);
-    });
-  }
+  gsap.to(canvas, { opacity: .62, duration: .8, ease: 'power2.out' });
   canvas.addEventListener('webglcontextlost', event => {
     event.preventDefault();
     sync(false);
     resizeObserver.disconnect();
-    triggers.forEach(tween => { tween.scrollTrigger?.kill(); tween.kill(); });
+    gsap.killTweensOf(canvas);
+    container.removeEventListener('pointermove', pointer);
     dotGeometry.dispose(); lineGeometry.dispose(); dotMaterial.dispose(); lineMaterial.dispose(); renderer.dispose();
     canvas.remove();
-    container.classList.remove('journey-ready');
+    container.classList.remove('hero-three-ready');
   }, { once: true });
-  container.classList.add('journey-ready');
+  container.classList.add('hero-three-ready');
   return { sync };
 }
