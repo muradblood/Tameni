@@ -119,8 +119,7 @@ button{cursor:pointer}
 .media-card-body{padding:19px}
 .media-card h3{margin:0 0 5px;color:var(--navy)}
 .media-card p{margin:0;color:var(--muted);font-size:.9rem}
-.media-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(21,18,9,.13)}
-.media-card{transition:.2s}
+.media-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
 
 .org-image,.map-image{width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);object-fit:cover;max-height:560px}
 .about-copy{max-width:820px;margin:0 auto 30px;text-align:center;color:var(--muted)}
@@ -234,13 +233,40 @@ textarea.form-control{resize:vertical;min-height:130px}
 .card:hover{border-color:rgba(212,175,55,.45)}
 .card-motion{position:relative}
 .card-motion-shine{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;z-index:1}
+/* Surface detail stays CSS-only so cards have no extra download or animation loop. */
+.info-card,.feature-card,.testimonial{position:relative;overflow:hidden;background:linear-gradient(155deg,#fff 55%,#fffcf3)}
+.info-card::before,.feature-card::before{content:"";position:absolute;top:0;right:18%;left:18%;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,transparent,#d4af37,transparent);opacity:.45;transform:scaleX(.4);transition:transform .3s ease,opacity .3s ease}
+.info-card:hover::before,.feature-card:hover::before{transform:scaleX(1);opacity:1}
+.info-card:hover,.feature-card:hover{box-shadow:0 18px 40px rgba(34,26,8,.12)}
+.info-icon{box-shadow:inset 0 0 0 1px rgba(138,101,16,.1);transition:transform .25s ease,background .25s ease}
+.info-card:hover .info-icon{transform:translateY(-3px);background:#f7e7b4}
+.testimonial::before{content:"“";position:absolute;top:4px;left:20px;color:rgba(212,175,55,.18);font-size:5rem;line-height:1;pointer-events:none}
+.testimonial-head,.testimonial-text,.testimonial-date{position:relative;z-index:1}
+.media-card{position:relative;display:block;isolation:isolate}
+.media-card::before{content:"";position:absolute;top:0;right:0;left:0;aspect-ratio:16/9;background:linear-gradient(to top,rgba(13,4,40,.24),transparent 56%);z-index:1;pointer-events:none}
+.media-card>img{transition:transform .35s ease,filter .35s ease}
+.media-card-body{position:relative;z-index:2;background:#fff;min-height:138px}
+.media-card-body::after{content:"عرض تفاصيل الرحلة ←";display:block;margin-top:14px;padding-top:9px;border-top:1px solid var(--border);color:var(--gold-dark);font-size:.82rem;font-weight:800}
+#page-blog .media-card-body::after{content:"قراءة الدليل ←"}
+.media-card:is(:hover,:focus-visible){border-color:#c8a847;box-shadow:0 20px 42px rgba(21,18,9,.16)}
+.media-card:is(:hover,:focus-visible)>img{transform:scale(1.035);filter:saturate(1.12)}
+.media-card:is(:hover,:focus-visible) .media-card-body::after{color:#6f4d08}
+.city-card{isolation:isolate;border:1px solid transparent;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.city-card::before{content:"↗";position:absolute;top:14px;left:14px;z-index:3;display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(12,21,38,.3);color:#fff;font-size:1.2rem;transition:background .25s ease,transform .25s ease}
+.city-card h3::after{content:"استكشف الوجهة";display:block;color:rgba(255,255,255,.88);font-size:.78rem;font-weight:600}
+.city-card:is(:hover,:focus-visible){box-shadow:0 18px 38px rgba(21,18,9,.22);border-color:#e8c877}
+.city-card:focus-visible img{transform:scale(1.06)}
+.city-card:is(:hover,:focus-visible)::before{background:var(--gold-dark);transform:translate(-2px,-2px)}
+.media-card:focus-visible,.city-card:focus-visible{outline:3px solid #8a6510;outline-offset:4px}
+@media (hover:none){.media-card:active,.city-card:active{transform:scale(.985)}.info-card:active,.feature-card:active{border-color:rgba(212,175,55,.5)}}
 @media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
   .card-motion{transition:transform .18s ease-out,box-shadow .18s ease-out}
-  .card-motion-active{transform:perspective(900px) rotateX(var(--card-rx,0deg)) rotateY(var(--card-ry,0deg));will-change:transform}
-  .card-motion-active>.card-motion-shine{opacity:1;background:radial-gradient(circle at var(--card-x,50%) var(--card-y,50%),rgba(212,175,55,.1),transparent 65%);box-shadow:inset 0 0 0 1px rgba(212,175,55,.45)}
+  .card-motion.card-motion-active{transform:perspective(900px) translateY(-3px) rotateX(var(--card-rx,0deg)) rotateY(var(--card-ry,0deg));will-change:transform}
+  .card-motion-active>.card-motion-shine{opacity:1;background:radial-gradient(circle at var(--card-x,50%) var(--card-y,50%),rgba(246,217,134,.18),transparent 62%);box-shadow:inset 0 0 0 1px rgba(212,175,55,.48)}
   .feature-card:hover img{transform:translateY(-3px) rotate(-4deg);filter:drop-shadow(0 5px 10px rgba(212,175,55,.3))}
   .feature-card img{transition:transform .25s ease,filter .25s ease}
 }
+@media (prefers-reduced-motion:reduce){.card,.city-card,.media-card>img,.city-card img,.info-icon,.info-card::before,.feature-card::before,.city-card::before{transition:none!important}}
 @media (max-width:640px){.trust-strip{margin-top:-22px}.trust-grid{grid-template-columns:1fr;padding:10px}.trust-grid>div{border-left:0;border-bottom:1px solid var(--border);padding:10px}.trust-grid>div:last-child{border-bottom:0}.hero{min-height:520px}}
 
 @media (max-width:640px){
