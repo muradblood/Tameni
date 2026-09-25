@@ -1,7 +1,7 @@
 import { Scene, PerspectiveCamera, WebGLRenderer, BufferGeometry, Float32BufferAttribute, Points, PointsMaterial, LineSegments, LineBasicMaterial, Group, AdditiveBlending } from 'three';
 import { gsap } from 'gsap';
 
-export function mountHeroScene(container) {
+export function mountHeroScene(container, { reducedMotion = false, lowPower = false } = {}) {
   const canvas = document.createElement('canvas');
   canvas.className = 'hero-three-canvas';
   canvas.setAttribute('aria-hidden', 'true');
@@ -44,7 +44,7 @@ export function mountHeroScene(container) {
   const resize = () => {
     const { width, height } = container.getBoundingClientRect();
     if (!width || !height) return;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower || width < 600 ? 1 : 1.5));
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.position.z = width < 600 ? 9 : 7;
@@ -54,7 +54,7 @@ export function mountHeroScene(container) {
   const draw = time => {
     if (!running) return;
     frame = requestAnimationFrame(draw);
-    if (time - last < 33) return;
+    if (time - last < (lowPower || container.clientWidth < 600 ? 50 : 33)) return;
     last = time;
     group.rotation.y += .003 + (targetX - group.rotation.y) * .02;
     group.rotation.x += (targetY - group.rotation.x) * .02;
@@ -72,14 +72,17 @@ export function mountHeroScene(container) {
   };
   container.addEventListener('pointermove', pointer, { passive: true });
   container.appendChild(canvas);
-  const resizeObserver = new ResizeObserver(resize);
-  resizeObserver.observe(container);
+  const resizeObserver = 'ResizeObserver' in window ? new ResizeObserver(resize) : null;
+  if (resizeObserver) resizeObserver.observe(container);
+  else window.addEventListener('resize', resize, { passive: true });
   resize();
-  gsap.to(canvas, { opacity: .62, duration: .8, ease: 'power2.out' });
+  if (reducedMotion) canvas.style.opacity = '.62';
+  else gsap.to(canvas, { opacity: .62, duration: .8, ease: 'power2.out' });
   canvas.addEventListener('webglcontextlost', event => {
     event.preventDefault();
     sync(false);
-    resizeObserver.disconnect();
+    if (resizeObserver) resizeObserver.disconnect();
+    else window.removeEventListener('resize', resize);
     gsap.killTweensOf(canvas);
     container.removeEventListener('pointermove', pointer);
     dotGeometry.dispose(); lineGeometry.dispose(); dotMaterial.dispose(); lineMaterial.dispose(); renderer.dispose();

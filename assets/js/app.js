@@ -171,12 +171,9 @@
 // Keep the hero image visible while its optional Three.js layer loads after first paint.
 (() => {
   const section = document.querySelector('#page-home .hero');
-  if (!section || !('IntersectionObserver' in window)) return;
+  if (!section) return;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const connection = navigator.connection;
-  const eligible = () => !reduced.matches && !connection?.saveData &&
-    !/^(slow-2g|2g)$/.test(connection?.effectiveType || '') &&
-    !(navigator.deviceMemory && navigator.deviceMemory <= 2);
   let webglSupported;
   const hasWebGL = () => {
     if (webglSupported !== undefined) return webglSupported;
@@ -189,18 +186,18 @@
     return webglSupported;
   };
   let near = false, visible = false, pending = false, scheduled = false, heroReady = false, controller = null;
-  const sync = () => controller?.sync(visible && !document.hidden && eligible() && section.closest('.page.active'));
+  const sync = () => controller?.sync(visible && !document.hidden && !reduced.matches && section.closest('.page.active'));
   const load = () => {
-    if (scheduled || pending || controller || !heroReady || !near || !eligible() || document.hidden || !section.closest('.page.active')) return;
+    if (scheduled || pending || controller || !heroReady || !near || document.hidden || !section.closest('.page.active')) return;
     scheduled = true;
     const begin = async () => {
       scheduled = false;
-      if (pending || controller || !near || !eligible() || !hasWebGL() || document.hidden || !section.closest('.page.active')) return;
+      if (pending || controller || !near || !hasWebGL() || document.hidden || !section.closest('.page.active')) return;
       pending = true;
       try {
         const { mountHeroScene } = await import('/assets/js/journey-bundle.js');
-        if (!eligible() || !section.closest('.page.active')) return;
-        controller = mountHeroScene(section);
+        if (!section.closest('.page.active')) return;
+        controller = mountHeroScene(section, { reducedMotion: reduced.matches, lowPower: !!connection?.saveData || /^(slow-2g|2g)$/.test(connection?.effectiveType || '') || !!(navigator.deviceMemory && navigator.deviceMemory <= 2) });
         sync();
       } catch (error) { console.warn('تعذر تشغيل المشهد الاختياري', error); }
       finally { pending = false; }
@@ -208,9 +205,16 @@
     if ('requestIdleCallback' in window) requestIdleCallback(begin, { timeout: 1500 });
     else setTimeout(begin, 200);
   };
-  new IntersectionObserver(entries => { near = entries[0].isIntersecting; if (near) load(); }, { rootMargin: '200px' }).observe(section);
-  new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); }, { threshold: .01 }).observe(section);
-  const afterLoad = () => setTimeout(() => { heroReady = true; load(); }, 1200);
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => { near = entries[0].isIntersecting; if (near) load(); }, { rootMargin: '200px' }).observe(section);
+    new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); }, { threshold: .01 }).observe(section);
+  } else {
+    // Older browsers can still load the scene after the page is ready.
+    near = visible = true;
+  }
+  // Give slower mobile devices time to finish their first interaction and paint.
+  const afterLoad = () => setTimeout(() => { heroReady = true; load(); },
+    connection?.saveData || (navigator.deviceMemory && navigator.deviceMemory <= 2) || window.innerWidth < 640 ? 5000 : 1200);
   if (document.readyState === 'complete') afterLoad();
   else window.addEventListener('load', afterLoad, { once: true });
   document.addEventListener('visibilitychange', () => { sync(); load(); });
@@ -218,8 +222,7 @@
   window.addEventListener('hashchange', sync);
   window.addEventListener('pagehide', () => controller?.sync(false));
   window.addEventListener('pageshow', () => { sync(); load(); });
-  reduced.addEventListener('change', () => { sync(); load(); });
-  connection?.addEventListener('change', () => { sync(); load(); });
+  reduced.addEventListener?.('change', sync);
   document.addEventListener('site:navigate', () => { sync(); load(); });
 })();
 
