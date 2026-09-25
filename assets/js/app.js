@@ -168,9 +168,9 @@
   window.addEventListener('popstate', () => controller?.scrollToTop());
 })();
 
-// The mid-page scene is a separate tree-shaken module, loaded only near the viewport.
+// Keep the hero image visible while its optional Three.js layer loads after first paint.
 (() => {
-  const section = document.getElementById('three-canvas-container');
+  const section = document.querySelector('#page-home .hero');
   if (!section || !('IntersectionObserver' in window)) return;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const connection = navigator.connection;
@@ -188,17 +188,19 @@
     } catch (_) { webglSupported = false; }
     return webglSupported;
   };
-  let near = false, visible = false, pending = false, controller = null;
+  let near = false, visible = false, pending = false, scheduled = false, heroReady = false, controller = null;
   const sync = () => controller?.sync(visible && !document.hidden && eligible() && section.closest('.page.active'));
   const load = () => {
-    if (pending || controller || !near || !eligible() || document.hidden || !section.closest('.page.active')) return;
+    if (scheduled || pending || controller || !heroReady || !near || !eligible() || document.hidden || !section.closest('.page.active')) return;
+    scheduled = true;
     const begin = async () => {
-      if (!near || !eligible() || !hasWebGL() || document.hidden || !section.closest('.page.active')) return;
+      scheduled = false;
+      if (pending || controller || !near || !eligible() || !hasWebGL() || document.hidden || !section.closest('.page.active')) return;
       pending = true;
       try {
-        const { mountJourney } = await import('/assets/js/journey-bundle.js');
-        if (!eligible()) return;
-        controller = await mountJourney(section);
+        const { mountHeroScene } = await import('/assets/js/journey-bundle.js');
+        if (!eligible() || !section.closest('.page.active')) return;
+        controller = mountHeroScene(section);
         sync();
       } catch (error) { console.warn('تعذر تشغيل المشهد الاختياري', error); }
       finally { pending = false; }
@@ -208,6 +210,9 @@
   };
   new IntersectionObserver(entries => { near = entries[0].isIntersecting; if (near) load(); }, { rootMargin: '200px' }).observe(section);
   new IntersectionObserver(entries => { visible = entries[0].isIntersecting; sync(); }, { threshold: .01 }).observe(section);
+  const afterLoad = () => setTimeout(() => { heroReady = true; load(); }, 1200);
+  if (document.readyState === 'complete') afterLoad();
+  else window.addEventListener('load', afterLoad, { once: true });
   document.addEventListener('visibilitychange', () => { sync(); load(); });
   window.addEventListener('popstate', sync);
   window.addEventListener('hashchange', sync);

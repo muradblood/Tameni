@@ -72,9 +72,10 @@ button{cursor:pointer}
 
 .main-offset{padding-top:112px}
 .hero{position:relative;min-height:570px;display:grid;place-items:center;overflow:hidden;background:#18334d}
-.hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,8,14,.78),rgba(5,8,14,.28),rgba(5,8,14,.58))}
-.hero-content{position:relative;z-index:2;color:#fff;text-align:center;width:min(820px,calc(100% - 32px));padding:80px 0}
+.hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;z-index:0}
+.hero::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(5,8,14,.78),rgba(5,8,14,.28),rgba(5,8,14,.58))}
+.hero-three-canvas{position:absolute;inset:0;z-index:2;width:100%;height:100%;opacity:0;pointer-events:none}
+.hero-content{position:relative;z-index:3;color:#fff;text-align:center;width:min(820px,calc(100% - 32px));padding:80px 0}
 .hero-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(0,0,0,.18);font-weight:700;font-size:.9rem}
 .hero h1{font-size:clamp(2.05rem,5.3vw,4rem);line-height:1.15;margin:18px 0 12px;text-shadow:0 4px 22px rgba(0,0,0,.35)}
 .hero-highlight{background:linear-gradient(125deg,#fff4c5 12%,#e5b542 55%,#fff2a1);background-clip:text;-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 0 16px rgba(240,196,91,.55))}
@@ -279,3 +280,5 @@ html.lenis,html.lenis body{height:auto}
 .journey-step p{margin:0;color:#c6d1db}
 @media (max-width:640px){.journey-steps{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}.journey-step{flex:0 0 83%;scroll-snap-align:start}.journey-visual{height:350px}.journey-orbit{width:235px}}
 @media (prefers-reduced-motion:reduce){.journey-fallback,.journey-canvas{transition:none}}
+.journey-section .journey-visual{display:none}
+.journey-section .journey-steps{margin-top:0}
