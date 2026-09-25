@@ -308,3 +308,26 @@ html.lenis,html.lenis body{height:auto}
 @media (prefers-reduced-motion:reduce){.journey-fallback,.journey-canvas{transition:none}}
 .journey-section .journey-visual{display:none}
 .journey-section .journey-steps{margin-top:0}
+
+/* A small sequence for the journey; all content remains visible without JS. */
+.journey-steps{position:relative;padding-top:13px;--journey-progress:0%}
+.journey-steps::before,.journey-steps::after{content:"";position:absolute;top:0;right:0;height:3px;border-radius:4px;pointer-events:none}
+.journey-steps::before{left:0;background:rgba(235,201,113,.18)}
+.journey-steps::after{width:var(--journey-progress);background:linear-gradient(90deg,#fff1b5,#d4af37);box-shadow:0 0 14px rgba(235,201,113,.42);transition:width .9s ease}
+.journey-enhanced .journey-step{opacity:.82;transform:translateY(12px);transition:opacity .48s ease,transform .48s ease,border-color .3s ease,background .3s ease,box-shadow .3s ease}
+.journey-in-view .journey-step{opacity:1;transform:none}
+.journey-in-view .journey-step:nth-child(2){transition-delay:.12s}
+.journey-in-view .journey-step:nth-child(3){transition-delay:.24s}
+.journey-step.is-current{border-color:rgba(242,206,117,.72);background:rgba(242,206,117,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 30px rgba(0,0,0,.1)}
+@media (max-width:640px){.journey-enhanced .journey-step{opacity:1;transform:none;transition-delay:0s!important}.journey-steps::after{transition-duration:.25s}}
+@media (prefers-reduced-motion:reduce){.journey-enhanced .journey-step{opacity:1;transform:none}.journey-steps::after{transition:none}}
+
+/* Accents respond to visibility and hover without adding work to the first paint. */
+#page-home .section-heading h2::after{content:"";display:block;width:55px;height:3px;margin:12px auto 0;border-radius:3px;background:var(--gold);transform:scaleX(0);transition:transform .65s ease}
+#page-home .fade-up.visible .section-heading h2::after,#page-home .journey-in-view .section-heading h2::after{transform:scaleX(1)}
+.hero-actions .btn{position:relative;overflow:hidden;isolation:isolate}
+.hero-actions .btn::after{content:"";position:absolute;inset:-80% auto -80% -55%;width:24%;transform:translateX(0) rotate(24deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);pointer-events:none;transition:transform .65s ease}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){.hero-actions .btn:hover::after{transform:translateX(900%) rotate(24deg)}}
+.hero-actions .btn:focus-visible{outline:3px solid #ffe39a;outline-offset:3px}
+.btn-primary:hover{color:#fff}
+@media (prefers-reduced-motion:reduce){#page-home .section-heading h2::after{transform:scaleX(1);transition:none}.hero-actions .btn::after{display:none}}
