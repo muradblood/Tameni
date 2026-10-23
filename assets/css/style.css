@@ -217,6 +217,7 @@ textarea.form-control{resize:vertical;min-height:130px}
   .detail-stats{grid-template-columns:1fr 1fr 1fr;gap:7px}.mini-stat{padding:13px 7px}.mini-stat strong{font-size:.92rem}
   .cities-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.city-card{height:165px}.city-card h3{right:12px;bottom:10px;font-size:1rem}
   .contact-form-card,.contact-panel{padding:21px}.footer-grid{grid-template-columns:1fr}.footer-bottom{display:block}.footer-bottom span{display:block;margin-top:5px}
+  .footer-logo{width:185px;height:auto}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}.fade-up{opacity:1;transform:none}}
 
